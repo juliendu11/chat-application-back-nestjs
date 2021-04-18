@@ -1,0 +1,152 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type CommonOutput {
+  message: String!
+  result: Boolean!
+}
+
+input ConfirmMemberInput {
+  email: String!
+  token: String!
+}
+
+input CreateDirectMessageInput {
+  """Example field (placeholder)"""
+  exampleField: Int!
+}
+
+input CreateRoomInput {
+  name: String!
+}
+
+type CreateRoomOutput {
+  message: String!
+  result: Boolean!
+  value: Room
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type DirectMessage {
+  _id: String!
+  name: String!
+}
+
+type ForgotPassword {
+  date: DateTime
+  expiration_date: DateTime
+  token: String!
+}
+
+input ForgotPasswordInput {
+  email: String!
+}
+
+type GetRoomOuput {
+  message: String!
+  result: Boolean!
+  value: Room!
+}
+
+type GetRoomsOuput {
+  message: String!
+  result: Boolean!
+  value: [Room!]!
+}
+
+input LoginMemberInput {
+  id: String!
+  password: String!
+}
+
+type LoginMemberOutput {
+  message: String!
+  result: Boolean!
+  token: String!
+}
+
+type Member {
+  _id: String!
+  confirmed: Boolean!
+  email: String!
+  forgot_password: ForgotPassword!
+  password: String!
+  registration_information: RegistrationInformation!
+  username: String!
+}
+
+type Message {
+  date: DateTime!
+  message: String!
+  user: Member!
+}
+
+type Mutation {
+  confirmAccount(confirmAccountInput: ConfirmMemberInput!): CommonOutput!
+  createDirectMessage(createDirectMessageInput: CreateDirectMessageInput!): DirectMessage!
+  createRoom(createRoomInput: CreateRoomInput!): CreateRoomOutput!
+  forgotPassword(forgotPasswordInput: ForgotPasswordInput!): CommonOutput!
+  login(loginMemberInput: LoginMemberInput!): LoginMemberOutput!
+  register(registerMemberInput: RegisterMemberInput!): RegisterMemberOutput!
+  removeDirectMessage(id: Int!): DirectMessage!
+  removeRoom(id: String!): CommonOutput!
+  resetPassword(resetPasswordInput: ResetPasswordInput!): CommonOutput!
+  updateDirectMessage(updateDirectMessageInput: UpdateDirectMessageInput!): DirectMessage!
+  updateRoom(updateRoomInput: UpdateRoomInput!): CreateRoomOutput!
+}
+
+type Query {
+  directMessage(id: Int!): DirectMessage!
+  directMessages: [DirectMessage!]!
+  room(id: String!): GetRoomOuput!
+  rooms: GetRoomsOuput!
+  sayHello: String!
+}
+
+input RegisterMemberInput {
+  email: String!
+  password: String!
+  username: String!
+}
+
+type RegisterMemberOutput {
+  message: String!
+  result: Boolean!
+}
+
+type RegistrationInformation {
+  date: DateTime
+  expiration_date: DateTime
+  token: String!
+}
+
+input ResetPasswordInput {
+  email: String!
+  newPassword: String!
+  token: String!
+}
+
+type Room {
+  _id: String!
+  last_message: Message!
+  messages: [Message!]!
+  name: String!
+}
+
+input UpdateDirectMessageInput {
+  """Example field (placeholder)"""
+  exampleField: Int
+  id: Int!
+}
+
+input UpdateRoomInput {
+  date: DateTime!
+  id: String!
+  message: String!
+  userId: String!
+}
