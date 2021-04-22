@@ -7,7 +7,7 @@ import { Member } from '../../../members/entities/member.entity';
 @Schema({ _id: false, id: false })
 export class Message {
   @Field(() => Member)
-  @Prop({ type: Types.ObjectId, ref: 'Member', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'Member' })
   user: Types.ObjectId | Member;
 
   @Field(() => Date)

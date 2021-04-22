@@ -15,7 +15,10 @@ export class RoomsService {
     createRoomInput: CreateRoomInput,
   ): Promise<ServiceResponseType<Room | null>> {
     try {
-      const room = await this.roomModel.create({ name: createRoomInput.name });
+      const room = await this.roomModel.create({
+        name: createRoomInput.name,
+        isPrivate: createRoomInput.isPrivate,
+      });
       return {
         code: 200,
         message: '',

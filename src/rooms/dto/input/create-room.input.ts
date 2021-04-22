@@ -4,4 +4,7 @@ import { InputType, Field } from '@nestjs/graphql';
 export class CreateRoomInput {
   @Field(() => String)
   name: string;
+
+  @Field(() => Boolean)
+  isPrivate: boolean;
 }

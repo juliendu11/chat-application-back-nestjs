@@ -13,6 +13,7 @@ import { MembersModule } from './members/members.module';
 import { MailerFactory } from './factories/mail-factory';
 import { DirectMessagesModule } from './direct-messages/direct-messages.module';
 import { RoomsModule } from './rooms/rooms.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { RoomsModule } from './rooms/rooms.module';
     MailModule,
     DirectMessagesModule,
     RoomsModule,
+    ChatModule,
   ],
 })
 export class AppModule {}

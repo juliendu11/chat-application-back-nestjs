@@ -18,6 +18,7 @@ input CreateDirectMessageInput {
 }
 
 input CreateRoomInput {
+  isPrivate: Boolean!
   name: String!
 }
 
@@ -133,7 +134,8 @@ input ResetPasswordInput {
 
 type Room {
   _id: String!
-  last_message: Message!
+  isPrivate: Boolean!
+  last_message: Message
   messages: [Message!]!
   name: String!
 }

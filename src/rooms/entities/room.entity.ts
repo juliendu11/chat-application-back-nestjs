@@ -13,12 +13,16 @@ export class Room {
   @Prop({ required: true, unique: true })
   name: string;
 
+  @Field(() => Boolean)
+  @Prop({ default: false })
+  isPrivate: boolean;
+
   @Field(() => [Message])
   @Prop({ default: [] })
   messages: Message[];
 
-  @Field(() => Message)
-  @Prop({ type: MessageSchema, default: new Message() })
+  @Field(() => Message, { nullable: true })
+  @Prop({ type: MessageSchema })
   last_message: Message;
 }
 export type RoomDocument = Room & Document;
