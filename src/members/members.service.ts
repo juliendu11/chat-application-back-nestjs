@@ -207,9 +207,9 @@ export class MembersService {
     roomId: string,
   ): Promise<ServiceResponseType<undefined>> {
     try {
-      await this.memberModel.deleteOne(
+      await this.memberModel.updateOne(
         { _id: Types.ObjectId(userId) },
-        { $push: { rooms: Types.ObjectId(roomId) } },
+        { $pull: { rooms: Types.ObjectId(roomId) } },
       );
       return {
         code: 200,
