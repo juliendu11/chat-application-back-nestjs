@@ -2,10 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import * as Redis from 'ioredis';
 import { ConfigService, InjectConfig } from 'nestjs-config';
+import { Room } from '../rooms/entities/room.entity';
+import { ROOM_ADDED } from './redis.pub-sub';
 
 @Injectable()
 export class RedisService {
-  public redisPubSub: RedisPubSub;
+  private redisPubSub: RedisPubSub;
 
   constructor(@InjectConfig() private readonly config: ConfigService) {
     const redisConfig = {
@@ -21,5 +23,13 @@ export class RedisService {
       publisher: new Redis(redisConfig),
       subscriber: new Redis(redisConfig),
     });
+  }
+
+  roomAddedListener() {
+    return this.redisPubSub.asyncIterator(ROOM_ADDED);
+  }
+
+  roomAddedPublish(room: Room) {
+    this.redisPubSub.publish(ROOM_ADDED, { roomAdded: room });
   }
 }

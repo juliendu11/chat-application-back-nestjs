@@ -8,11 +8,11 @@ export class RegistrationInformation {
   @Prop()
   token: string;
 
-  @Field(() => Date, { nullable: true })
+  @Field(() => String, { nullable: true })
   @Prop()
   date: Date;
 
-  @Field(() => Date, { nullable: true })
+  @Field(() => String, { nullable: true })
   @Prop()
   expiration_date: Date;
 }

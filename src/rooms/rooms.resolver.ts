@@ -1,10 +1,9 @@
-import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, Subscription } from '@nestjs/graphql';
 import { RoomsService } from './rooms.service';
 import { Room } from './entities/room.entity';
 import { CreateRoomInput } from './dto/input/create-room.input';
 import { CreateRoomOutput } from './dto/output/create-room.output';
 import { getResult } from '../helpers/code.helper';
-import { GetRoomsOuput } from './dto/output/get-rooms.output';
 import { GetRoomOuput } from './dto/output/get-room.output';
 import { CommonOutput } from '../common/CommonOutput';
 import { AddRoomMessageInput } from './dto/input/add-room-message.input';
@@ -14,13 +13,50 @@ import { GqlAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { JWTTokenData } from '../types/JWTToken';
 import { CurrentUser } from '../decorators/graphql-current-user.decorator';
 import { MembersService } from '../members/members.service';
+import { RedisService } from '../redis/redis.service';
+import { ROOM_ADDED } from '../redis/redis.pub-sub';
+import { Types } from 'mongoose';
+import { ForgotPassword } from '../members/entities/sub/forgot-password.entity';
 
 @Resolver(() => Room)
 export class RoomsResolver {
   constructor(
     private readonly roomsService: RoomsService,
     private readonly memberService: MembersService,
+    private readonly redisService: RedisService,
   ) {}
+
+  test() {
+    let i = 0;
+    setInterval(() => {
+      this.redisService.roomAddedPublish({
+        _id: Types.ObjectId(),
+        name: 'Test ' + i,
+        isPrivate: false,
+        messages: [],
+        last_message: {
+          message: 'Hey',
+          date: new Date(),
+          user: {
+            _id: Types.ObjectId(),
+            username: 'Bob',
+            email: 'bob@bobo.com',
+            password: '123',
+            registration_information: {
+              token: 'b',
+              date: new Date(),
+              expiration_date: new Date(),
+            },
+            forgot_password: new ForgotPassword(),
+            confirmed: true,
+            rooms: [],
+          },
+        },
+        member: Types.ObjectId(),
+      });
+      i++;
+    }, 2000);
+  }
 
   @Mutation(() => CreateRoomOutput)
   @UseGuards(GqlAuthGuard)
@@ -36,6 +72,7 @@ export class RoomsResolver {
     const result = getResult(code);
     if (result) {
       this.memberService.addRoomCreated(user._id, value._id.toString());
+      this.redisService.roomAddedPublish(value);
     }
 
     return {
@@ -45,15 +82,10 @@ export class RoomsResolver {
     };
   }
 
-  @Query(() => GetRoomsOuput, { name: 'rooms' })
+  @Query(() => [Room], { name: 'rooms' })
   @UseGuards(GqlAuthGuard)
-  async findAll(): Promise<GetRoomsOuput> {
-    const { code, message, value } = await this.roomsService.findAll();
-    return {
-      result: getResult(code),
-      message,
-      value,
-    };
+  async findAll(): Promise<Room[]> {
+    return await this.roomsService.findAll();
   }
 
   @Query(() => GetRoomOuput, { name: 'room' })
@@ -102,5 +134,12 @@ export class RoomsResolver {
       result,
       message,
     };
+  }
+
+  @Subscription(() => Room, {
+    name: ROOM_ADDED,
+  })
+  addCommentHandler() {
+    return this.redisService.roomAddedListener();
   }
 }

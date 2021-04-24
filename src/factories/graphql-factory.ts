@@ -23,19 +23,19 @@ export class GraphqlQLFactory implements GqlOptionsFactory {
       installSubscriptionHandlers: true,
       uploads: false,
       context: ({ req, res }) => ({ req, res }),
-      subscriptions: {
-        onConnect: (connectionParams: any) => {
-          if (connectionParams.authorization) {
-            return this.validateToken(connectionParams.authorization).then(
-              (user) => {
-                return {
-                  currentUser: user,
-                };
-              },
-            );
-          }
-        },
-      },
+      // subscriptions: {
+      //   onConnect: (connectionParams: any) => {
+      //     if (connectionParams.authorization) {
+      //       return this.validateToken(connectionParams.authorization).then(
+      //         (user) => {
+      //           return {
+      //             currentUser: user,
+      //           };
+      //         },
+      //       );
+      //     }
+      //   },
+      // },
     };
   }
 

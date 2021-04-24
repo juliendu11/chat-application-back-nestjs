@@ -34,21 +34,8 @@ export class RoomsService {
     }
   }
 
-  async findAll(): Promise<ServiceResponseType<Room[]>> {
-    try {
-      const rooms = await this.roomModel.find({}).lean();
-      return {
-        code: 200,
-        message: '',
-        value: rooms,
-      };
-    } catch (error) {
-      return {
-        code: 500,
-        message: error.message,
-        value: null,
-      };
-    }
+  async findAll(): Promise<Room[]> {
+    return await this.roomModel.find({}).lean();
   }
 
   async findOne(id: string): Promise<ServiceResponseType<Room | null>> {

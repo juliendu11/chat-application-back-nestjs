@@ -39,19 +39,14 @@ type CreateRoomOutput {
   value: Room
 }
 
-"""
-A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
-"""
-scalar DateTime
-
 type DirectMessage {
   _id: String!
   name: String!
 }
 
 type ForgotPassword {
-  date: DateTime
-  expiration_date: DateTime
+  date: String
+  expiration_date: String
   token: String!
 }
 
@@ -63,12 +58,6 @@ type GetRoomOuput {
   message: String!
   result: Boolean!
   value: Room!
-}
-
-type GetRoomsOuput {
-  message: String!
-  result: Boolean!
-  value: [Room!]!
 }
 
 input LoginMemberInput {
@@ -94,7 +83,7 @@ type Member {
 }
 
 type Message {
-  date: DateTime!
+  date: String!
   message: String!
   user: Member!
 }
@@ -117,7 +106,7 @@ type Query {
   directMessage(id: Int!): DirectMessage!
   directMessages: [DirectMessage!]!
   room(id: String!): GetRoomOuput!
-  rooms: GetRoomsOuput!
+  rooms: [Room!]!
   sayHello: String!
 }
 
@@ -133,8 +122,8 @@ type RegisterMemberOutput {
 }
 
 type RegistrationInformation {
-  date: DateTime
-  expiration_date: DateTime
+  date: String
+  expiration_date: String
   token: String!
 }
 
@@ -151,6 +140,10 @@ type Room {
   member: Member!
   messages: [Message!]!
   name: String!
+}
+
+type Subscription {
+  roomAdded: Room!
 }
 
 input UpdateDirectMessageInput {

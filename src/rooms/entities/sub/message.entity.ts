@@ -10,8 +10,8 @@ export class Message {
   @Prop({ type: Types.ObjectId, ref: 'Member' })
   user: Types.ObjectId | Member;
 
-  @Field(() => Date)
-  @Prop()
+  @Field(() => String)
+  @Prop({ default: new Date() })
   date: Date;
 
   @Field(() => String)
