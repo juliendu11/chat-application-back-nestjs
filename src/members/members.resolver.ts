@@ -1,6 +1,13 @@
-import { Resolver, Query, Mutation, Args, Context } from '@nestjs/graphql';
-import { Request, Response } from 'express';
-
+import {
+  Resolver,
+  Mutation,
+  Args,
+  Context,
+  Info,
+  Query,
+} from '@nestjs/graphql';
+import { Response } from 'express';
+import { fieldsList } from 'graphql-fields-list';
 import { MembersService } from './members.service';
 import { Member } from './entities/member.entity';
 import { RegisterMemberInput } from './dto/input/register-member.input';
@@ -14,6 +21,10 @@ import { CommonOutput } from '../common/CommonOutput';
 import { ConfirmMemberInput } from './dto/input/confirm-member-input';
 import { ResetPasswordInput } from './dto/input/reset-password-input';
 import { MailService } from '../mail/mail.service';
+import { UseGuards } from '@nestjs/common';
+import { GqlAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../decorators/graphql-current-user.decorator';
+import { JWTTokenData } from '../types/JWTToken';
 
 @Resolver(() => Member)
 export class MembersResolver {
@@ -121,6 +132,16 @@ export class MembersResolver {
       message,
       token: value ? value.token : '',
     };
+  }
+
+  @Query(() => Member)
+  @UseGuards(GqlAuthGuard)
+  async myInformation(@CurrentUser() user: JWTTokenData, @Info() info) {
+    return await this.membersService.getMyInfo(
+      user._id,
+      fieldsList(info),
+      true,
+    );
   }
 
   @Query(() => String)

@@ -223,6 +223,23 @@ export class MembersService {
     }
   }
 
+  async getMyInfo(id: string, selectedFields: string[] = [], lean = false) {
+    const member = await this.memberModel
+      .findById(Types.ObjectId(id))
+      .select(selectedFields.join(' '))
+      .lean(lean);
+
+    return member;
+  }
+
+  async getMemberInfo(id: string, selectedFields: string[] = [], lean = false) {
+    const member = await this.memberModel
+      .findOne({ $or: [{ email: id }, { username: id }] }, { lean })
+      .select(selectedFields.join(' '));
+
+    return member;
+  }
+
   private createJWTToken(_id: string, email: string, username: string) {
     const expHour = this.config.get('jsonwebtoken.time');
     const secret = this.config.get('jsonwebtoken.key');

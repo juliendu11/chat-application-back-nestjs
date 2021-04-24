@@ -30,6 +30,10 @@ export class Member {
   @Prop({ required: true })
   password: string;
 
+  @Field(() => String, { nullable: true })
+  @Prop({ default: '' })
+  profilPic: string;
+
   @Field(() => RegistrationInformation)
   @Prop({
     type: RegistrationInformationSchema,

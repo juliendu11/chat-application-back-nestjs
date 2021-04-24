@@ -1,23 +1,27 @@
 import { Resolver, Query, Mutation, Args, Subscription } from '@nestjs/graphql';
+import { Types } from 'mongoose';
+import { UseGuards } from '@nestjs/common';
+
 import { RoomsService } from './rooms.service';
 import { Room } from './entities/room.entity';
+
 import { CreateRoomInput } from './dto/input/create-room.input';
 import { CreateRoomOutput } from './dto/output/create-room.output';
-import { getResult } from '../helpers/code.helper';
 import { GetRoomOuput } from './dto/output/get-room.output';
-import { CommonOutput } from '../common/CommonOutput';
 import { AddRoomMessageInput } from './dto/input/add-room-message.input';
 import { AddRoomMessageOuput } from './dto/output/add-room-message.output';
-import { UseGuards } from '@nestjs/common';
+import { RoomAddedOutput } from './dto/output/room-added.ouput';
+import { RoomMessageAddedOuput } from './dto/output/room-message-added.ouput';
+
+import { getResult } from '../helpers/code.helper';
+import { CommonOutput } from '../common/CommonOutput';
 import { GqlAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { JWTTokenData } from '../types/JWTToken';
 import { CurrentUser } from '../decorators/graphql-current-user.decorator';
 import { MembersService } from '../members/members.service';
 import { RedisService } from '../redis/redis.service';
-import { ROOM_ADDED } from '../redis/redis.pub-sub';
-import { Types } from 'mongoose';
+import { ROOM_ADDED, ROOM_MESSAGE_ADDED } from '../redis/redis.pub-sub';
 import { ForgotPassword } from '../members/entities/sub/forgot-password.entity';
-
 @Resolver(() => Room)
 export class RoomsResolver {
   constructor(
@@ -50,6 +54,7 @@ export class RoomsResolver {
             forgot_password: new ForgotPassword(),
             confirmed: true,
             rooms: [],
+            profilPic: '',
           },
         },
         member: Types.ObjectId(),
@@ -110,8 +115,14 @@ export class RoomsResolver {
       user._id,
       addRoomMessageInput.message,
     );
+
+    const result = getResult(code);
+    if (result) {
+      this.redisService.roomMessageAddedPublish(value, addRoomMessageInput.id);
+    }
+
     return {
-      result: getResult(code),
+      result,
       message,
       value,
     };
@@ -136,10 +147,17 @@ export class RoomsResolver {
     };
   }
 
-  @Subscription(() => Room, {
+  @Subscription(() => RoomAddedOutput, {
     name: ROOM_ADDED,
   })
-  addCommentHandler() {
+  roomAddedHandler() {
     return this.redisService.roomAddedListener();
+  }
+
+  @Subscription(() => RoomMessageAddedOuput, {
+    name: ROOM_MESSAGE_ADDED,
+  })
+  roomMessageAddedHandler() {
+    return this.redisService.roomMessageAddedListener();
   }
 }
