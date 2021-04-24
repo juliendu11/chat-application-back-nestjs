@@ -2,12 +2,12 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-input AddMessageInput {
+input AddRoomMessageInput {
   id: String!
   message: String!
 }
 
-type AddMessageOuput {
+type AddRoomMessageOuput {
   message: String!
   result: Boolean!
   value: Message
@@ -100,7 +100,7 @@ type Message {
 }
 
 type Mutation {
-  addMessage(addMessageInput: AddMessageInput!): AddMessageOuput!
+  addRoomMessage(addRoomMessageInput: AddRoomMessageInput!): AddRoomMessageOuput!
   confirmAccount(confirmAccountInput: ConfirmMemberInput!): CommonOutput!
   createDirectMessage(createDirectMessageInput: CreateDirectMessageInput!): DirectMessage!
   createRoom(createRoomInput: CreateRoomInput!): CreateRoomOutput!

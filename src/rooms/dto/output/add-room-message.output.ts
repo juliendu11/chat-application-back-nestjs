@@ -4,7 +4,7 @@ import { Room } from '../../entities/room.entity';
 import { Message } from '../../entities/sub/message.entity';
 
 @ObjectType()
-export class AddMessageOuput implements GraphqlQLResponseType {
+export class AddRoomMessageOuput implements GraphqlQLResponseType {
   @Field(() => Boolean)
   result: boolean;
 

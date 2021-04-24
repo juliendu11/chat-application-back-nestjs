@@ -7,8 +7,8 @@ import { getResult } from '../helpers/code.helper';
 import { GetRoomsOuput } from './dto/output/get-rooms.output';
 import { GetRoomOuput } from './dto/output/get-room.output';
 import { CommonOutput } from '../common/CommonOutput';
-import { AddMessageInput } from './dto/input/add-message.input';
-import { AddMessageOuput } from './dto/output/add-message.output';
+import { AddRoomMessageInput } from './dto/input/add-room-message.input';
+import { AddRoomMessageOuput } from './dto/output/add-room-message.output';
 import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { JWTTokenData } from '../types/JWTToken';
@@ -67,16 +67,16 @@ export class RoomsResolver {
     };
   }
 
-  @Mutation(() => AddMessageOuput)
+  @Mutation(() => AddRoomMessageOuput)
   @UseGuards(GqlAuthGuard)
-  async addMessage(
-    @Args('addMessageInput') addMessageInput: AddMessageInput,
+  async addRoomMessage(
+    @Args('addRoomMessageInput') addRoomMessageInput: AddRoomMessageInput,
     @CurrentUser() user: JWTTokenData,
-  ): Promise<AddMessageOuput> {
+  ): Promise<AddRoomMessageOuput> {
     const { code, message, value } = await this.roomsService.addMessage(
-      addMessageInput.id,
+      addRoomMessageInput.id,
       user._id,
-      addMessageInput.message,
+      addRoomMessageInput.message,
     );
     return {
       result: getResult(code),
