@@ -17,7 +17,7 @@ export class GraphqlQLFactory implements GqlOptionsFactory {
       playground: true,
       debug: false,
       cors: {
-        origin: this.config.get('cors.allowedOrigin') || '*',
+        origin: this.config.get('cors.allowedOrigin'),
         credentials: true,
       },
       installSubscriptionHandlers: true,

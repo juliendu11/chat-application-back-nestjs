@@ -3,7 +3,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ServiceResponseType } from '../interfaces/GraphqlResponse';
 import { CreateRoomInput } from './dto/input/create-room.input';
-import { UpdateRoomInput } from './dto/input/update-room.input';
 import { Room, RoomDocument } from './entities/room.entity';
 import { Message } from './entities/sub/message.entity';
 
@@ -13,11 +12,13 @@ export class RoomsService {
 
   async create(
     createRoomInput: CreateRoomInput,
+    userId: string,
   ): Promise<ServiceResponseType<Room | null>> {
     try {
       const room = await this.roomModel.create({
         name: createRoomInput.name,
         isPrivate: createRoomInput.isPrivate,
+        member: Types.ObjectId(userId),
       });
       return {
         code: 200,
@@ -69,26 +70,26 @@ export class RoomsService {
     }
   }
 
-  async update(
+  async addMessage(
     id: string,
-    updateRoomInput: UpdateRoomInput,
-  ): Promise<ServiceResponseType<Room | null>> {
+    userId: string,
+    message: string,
+  ): Promise<ServiceResponseType<Message | null>> {
     try {
-      const message: Message = {
-        message: updateRoomInput.message,
-        user: Types.ObjectId(updateRoomInput.userId),
-        date: updateRoomInput.date,
+      const messageItem: Message = {
+        message,
+        user: Types.ObjectId(userId),
+        date: new Date(),
       };
-      const room = await this.roomModel.findByIdAndUpdate(
+      await this.roomModel.updateOne(
         { _id: Types.ObjectId(id) },
-        { $push: { messages: message } },
-        { new: true, useFindAndModify: true, lean: true },
+        { $push: { messages: messageItem } },
       );
 
       return {
         code: 200,
         message: '',
-        value: room,
+        value: messageItem,
       };
     } catch (error) {
       return {

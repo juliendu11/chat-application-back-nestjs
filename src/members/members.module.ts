@@ -11,5 +11,6 @@ import { MailModule } from '../mail/mail.module';
     MailModule,
   ],
   providers: [MembersResolver, MembersService],
+  exports: [MembersService],
 })
 export class MembersModule {}

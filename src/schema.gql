@@ -2,6 +2,17 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+input AddMessageInput {
+  id: String!
+  message: String!
+}
+
+type AddMessageOuput {
+  message: String!
+  result: Boolean!
+  value: Message
+}
+
 type CommonOutput {
   message: String!
   result: Boolean!
@@ -78,6 +89,7 @@ type Member {
   forgot_password: ForgotPassword!
   password: String!
   registration_information: RegistrationInformation!
+  rooms: [Room!]!
   username: String!
 }
 
@@ -88,6 +100,7 @@ type Message {
 }
 
 type Mutation {
+  addMessage(addMessageInput: AddMessageInput!): AddMessageOuput!
   confirmAccount(confirmAccountInput: ConfirmMemberInput!): CommonOutput!
   createDirectMessage(createDirectMessageInput: CreateDirectMessageInput!): DirectMessage!
   createRoom(createRoomInput: CreateRoomInput!): CreateRoomOutput!
@@ -98,7 +111,6 @@ type Mutation {
   removeRoom(id: String!): CommonOutput!
   resetPassword(resetPasswordInput: ResetPasswordInput!): CommonOutput!
   updateDirectMessage(updateDirectMessageInput: UpdateDirectMessageInput!): DirectMessage!
-  updateRoom(updateRoomInput: UpdateRoomInput!): CreateRoomOutput!
 }
 
 type Query {
@@ -136,6 +148,7 @@ type Room {
   _id: String!
   isPrivate: Boolean!
   last_message: Message
+  member: Member!
   messages: [Message!]!
   name: String!
 }
@@ -144,11 +157,4 @@ input UpdateDirectMessageInput {
   """Example field (placeholder)"""
   exampleField: Int
   id: Int!
-}
-
-input UpdateRoomInput {
-  date: DateTime!
-  id: String!
-  message: String!
-  userId: String!
 }

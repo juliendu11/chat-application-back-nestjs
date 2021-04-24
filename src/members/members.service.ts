@@ -3,10 +3,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
 import * as dayjs from 'dayjs';
 import * as jwt from 'jsonwebtoken';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { ConfigService, InjectConfig } from 'nestjs-config';
 import { generateRandomToken } from '../helpers/random.helper';
 import { ServiceResponseType } from '../interfaces/GraphqlResponse';
+import { JWTTokenData } from '../types/JWTToken';
 import { LoginResult } from '../types/LoginResult';
 import { LoginMemberInput } from './dto/input/login-member.input';
 import { RegisterMemberInput } from './dto/input/register-member.input';
@@ -86,7 +87,7 @@ export class MembersService {
       code: 200,
       message: '',
       value: {
-        token: this.createJWTToken(member),
+        token: this.createJWTToken(member._id, member.email, member.username),
         refreshToken: this.createRefreshToken(),
       },
     };
@@ -180,11 +181,54 @@ export class MembersService {
     };
   }
 
-  createJWTToken({ _id, email, username }: Member) {
+  async addRoomCreated(
+    userId: string,
+    roomId: string,
+  ): Promise<ServiceResponseType<undefined>> {
+    try {
+      await this.memberModel.updateOne(
+        { _id: Types.ObjectId(userId) },
+        { $push: { rooms: Types.ObjectId(roomId) } },
+      );
+      return {
+        code: 200,
+        message: '',
+      };
+    } catch (error) {
+      return {
+        code: 500,
+        message: error.message,
+      };
+    }
+  }
+
+  async removeRoomCreated(
+    userId: string,
+    roomId: string,
+  ): Promise<ServiceResponseType<undefined>> {
+    try {
+      await this.memberModel.deleteOne(
+        { _id: Types.ObjectId(userId) },
+        { $push: { rooms: Types.ObjectId(roomId) } },
+      );
+      return {
+        code: 200,
+        message: '',
+      };
+    } catch (error) {
+      return {
+        code: 500,
+        message: error.message,
+      };
+    }
+  }
+
+  private createJWTToken(_id: string, email: string, username: string) {
     const expHour = this.config.get('jsonwebtoken.time');
     const secret = this.config.get('jsonwebtoken.key');
 
-    const tokenData = JSON.parse(JSON.stringify({ email, username, _id }));
+    const tokenData: JWTTokenData = { email, username, _id: _id.toString() };
+
     return jwt.sign(
       { data: tokenData, iat: Math.floor(Date.now() / 1000) - 30 },
       secret,
@@ -196,7 +240,7 @@ export class MembersService {
     );
   }
 
-  createRefreshToken(): string {
+  private createRefreshToken(): string {
     return generateRandomToken();
   }
 }

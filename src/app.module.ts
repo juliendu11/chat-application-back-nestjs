@@ -13,7 +13,8 @@ import { MembersModule } from './members/members.module';
 import { MailerFactory } from './factories/mail-factory';
 import { DirectMessagesModule } from './direct-messages/direct-messages.module';
 import { RoomsModule } from './rooms/rooms.module';
-import { ChatModule } from './chat/chat.module';
+import { RedisModule } from './redis/redis.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -27,11 +28,12 @@ import { ChatModule } from './chat/chat.module';
     MailerModule.forRootAsync({
       useClass: MailerFactory,
     }),
+    AuthModule,
     MembersModule,
     MailModule,
     DirectMessagesModule,
     RoomsModule,
-    ChatModule,
+    RedisModule,
   ],
 })
 export class AppModule {}

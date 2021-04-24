@@ -1,6 +1,7 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types, Document } from 'mongoose';
+import { Room } from '../../rooms/entities/room.entity';
 
 import {
   ForgotPassword,
@@ -43,6 +44,10 @@ export class Member {
   @Field(() => Boolean)
   @Prop({ default: false })
   confirmed: boolean;
+
+  @Field(() => [Room])
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Room' }] })
+  rooms: Types.ObjectId[] | Room[];
 }
 export type MemberDocument = Member & Document;
 

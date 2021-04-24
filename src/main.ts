@@ -2,7 +2,6 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as helmet from 'helmet';
 import * as cookieParser from 'cookie-parser';
-import { RedisIoAdapter } from './adapters/redis.adapter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -15,7 +14,10 @@ async function bootstrap() {
     }),
   );
   app.use(cookieParser());
-  app.useWebSocketAdapter(new RedisIoAdapter(app, config));
+
+  const origin = config.get('cors.allowedOrigin');
+  app.enableCors({ origin, credentials: true });
+
   await app.listen(config.get('express.port'));
 }
 bootstrap();
