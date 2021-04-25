@@ -21,6 +21,10 @@ import { MembersService } from '../members/members.service';
 import { RedisService } from '../redis/redis.service';
 import { ROOM_ADDED, ROOM_MESSAGE_ADDED } from '../redis/redis.pub-sub';
 import { ForgotPassword } from '../members/entities/sub/forgot-password.entity';
+import { Member } from '../members/entities/member.entity';
+import { Message } from './entities/sub/message.entity';
+import { GetRoomMessageOuput } from './dto/output/get-room-message.ouput';
+import { GetRoomMessageInput } from './dto/input/get-room-message.input';
 @Resolver(() => Room)
 export class RoomsResolver {
   constructor(
@@ -104,8 +108,7 @@ export class RoomsResolver {
 
     const result = getResult(code);
     if (result) {
-      this.memberService.addRoomCreated(user._id, value._id.toString());
-      this.redisService.roomAddedPublish(value);
+      this.publishRoomAdded(user, value);
     }
 
     return {
@@ -113,6 +116,11 @@ export class RoomsResolver {
       message,
       value,
     };
+  }
+
+  private publishRoomAdded(user: JWTTokenData, value: Room) {
+    this.memberService.addRoomCreated(user._id, value._id.toString());
+    this.redisService.roomAddedPublish(value);
   }
 
   @Query(() => [Room], { name: 'rooms' })
@@ -125,6 +133,24 @@ export class RoomsResolver {
   @UseGuards(GqlAuthGuard)
   async findOne(@Args('id') id: string): Promise<GetRoomOuput> {
     const { code, message, value } = await this.roomsService.findOne(id);
+    return {
+      result: getResult(code),
+      message,
+      value,
+    };
+  }
+
+  @Query(() => GetRoomMessageOuput)
+  @UseGuards(GqlAuthGuard)
+  async roomMessage(
+    @Args('getRoomMessageInput') getRoomMessageInput: GetRoomMessageInput,
+  ): Promise<GetRoomMessageOuput> {
+    const { code, message, value } = await this.roomsService.getRoomMessage(
+      getRoomMessageInput.id,
+      getRoomMessageInput.skip,
+      getRoomMessageInput.limit,
+    );
+
     return {
       result: getResult(code),
       message,
@@ -146,7 +172,7 @@ export class RoomsResolver {
 
     const result = getResult(code);
     if (result) {
-      this.redisService.roomMessageAddedPublish(value, addRoomMessageInput.id);
+      await this.publishRoomMessageAdded(value, addRoomMessageInput);
     }
 
     return {
@@ -154,6 +180,19 @@ export class RoomsResolver {
       message,
       value,
     };
+  }
+
+  private async publishRoomMessageAdded(
+    value: Message,
+    addRoomMessageInput: AddRoomMessageInput,
+  ) {
+    const member = await this.memberService.findOne(
+      value.user.toString(),
+      ['_id', 'username', 'email', 'profilPic'],
+      true,
+    );
+    value.user = member as Member;
+    this.redisService.roomMessageAddedPublish(value, addRoomMessageInput.id);
   }
 
   @Mutation(() => CommonOutput)

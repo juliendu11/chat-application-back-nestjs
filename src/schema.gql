@@ -54,6 +54,18 @@ input ForgotPasswordInput {
   email: String!
 }
 
+input GetRoomMessageInput {
+  id: String!
+  limit: Float!
+  skip: Float!
+}
+
+type GetRoomMessageOuput {
+  message: String!
+  result: Boolean!
+  value: Room!
+}
+
 type GetRoomOuput {
   message: String!
   result: Boolean!
@@ -108,6 +120,7 @@ type Query {
   directMessages: [DirectMessage!]!
   myInformation: Member!
   room(id: String!): GetRoomOuput!
+  roomMessage(getRoomMessageInput: GetRoomMessageInput!): GetRoomMessageOuput!
   rooms: [Room!]!
   sayHello: String!
 }

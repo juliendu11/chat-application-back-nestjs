@@ -24,6 +24,13 @@ export class MembersService {
     return await this.memberModel.exists({ $or: [{ email }, { username }] });
   }
 
+  async findOne(id: string, selectedFields = [], lean = false) {
+    return await this.memberModel
+      .findById(Types.ObjectId(id))
+      .select(selectedFields.join(' '))
+      .lean(lean);
+  }
+
   async register({
     username,
     email,
