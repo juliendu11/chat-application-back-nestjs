@@ -23,6 +23,6 @@ export class GetRoomMessageOuput implements GraphqlQLResponseType {
   @Field(() => String)
   message: string;
 
-  @Field(() => Room)
-  value: Room;
+  @Field(() => GetRoomMessageValue)
+  value: GetRoomMessageValue;
 }

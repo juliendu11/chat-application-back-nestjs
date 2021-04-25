@@ -151,6 +151,16 @@ export class RoomsResolver {
       getRoomMessageInput.limit,
     );
 
+    await Promise.all(
+      value.messages.map(async (message) => {
+        message.user = (await this.memberService.findOne(
+          message.user.toString(),
+          ['_id', 'username', 'email', 'profilPic'],
+          true,
+        )) as Member;
+      }),
+    );
+
     return {
       result: getResult(code),
       message,

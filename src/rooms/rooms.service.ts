@@ -36,7 +36,18 @@ export class RoomsService {
   }
 
   async findAll(): Promise<Room[]> {
-    return await this.roomModel.find({}).lean();
+    const rooms = await this.roomModel.find({});
+    await Promise.all(
+      rooms.map(async (room) => {
+        await room
+          .populate({
+            path: 'last_message.user',
+            select: '_id email username profilPic',
+          })
+          .execPopulate();
+      }),
+    );
+    return rooms;
   }
 
   async findOne(id: string): Promise<ServiceResponseType<Room | null>> {
@@ -62,7 +73,7 @@ export class RoomsService {
     id: string,
     skip: number,
     limit: number,
-  ): Promise<ServiceResponseType<GetRoomMessageValue | null>> {
+  ): Promise<ServiceResponseType<GetRoomMessageValue>> {
     try {
       const match = {
         $match: { _id: Types.ObjectId(id) },
@@ -80,25 +91,19 @@ export class RoomsService {
 
       const messages = await this.roomModel.aggregate([
         match,
+        { $project: { messages: { $reverseArray: '$messages' } } },
         { $unwind: '$messages' },
         { $limit: limit + skip },
         { $skip: skip },
         {
           $project: {
-            text: '$messages.date',
-            type: '$messages.message',
-            date: '$messages.user',
+            message: '$messages.message',
+            date: '$messages.date',
+            user: '$messages.user',
+            populate: '$messages.populate',
           },
         },
       ]);
-
-      await Promise.all(
-        messages.map(async (message) => {
-          await message
-            .populate({ path: 'user', select: '_id username email profilPic' })
-            .execPopulate();
-        }),
-      );
 
       return {
         code: 200,
@@ -113,7 +118,11 @@ export class RoomsService {
       return {
         code: 500,
         message: error.message,
-        value: null,
+        value: {
+          pageAvailable: 0,
+          moreAvailable: false,
+          messages: [],
+        },
       };
     }
   }

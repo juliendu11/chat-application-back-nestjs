@@ -39,6 +39,11 @@ type CreateRoomOutput {
   value: Room
 }
 
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
 type DirectMessage {
   _id: String!
   name: String!
@@ -63,7 +68,13 @@ input GetRoomMessageInput {
 type GetRoomMessageOuput {
   message: String!
   result: Boolean!
-  value: Room!
+  value: GetRoomMessageValue!
+}
+
+type GetRoomMessageValue {
+  messages: [Message!]!
+  moreAvailable: Boolean!
+  pageAvailable: Float!
 }
 
 type GetRoomOuput {
@@ -96,7 +107,7 @@ type Member {
 }
 
 type Message {
-  date: String!
+  date: DateTime!
   message: String!
   user: Member!
 }
