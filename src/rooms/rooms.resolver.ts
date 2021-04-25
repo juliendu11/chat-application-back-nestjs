@@ -10,7 +10,6 @@ import { CreateRoomOutput } from './dto/output/create-room.output';
 import { GetRoomOuput } from './dto/output/get-room.output';
 import { AddRoomMessageInput } from './dto/input/add-room-message.input';
 import { AddRoomMessageOuput } from './dto/output/add-room-message.output';
-import { RoomAddedOutput } from './dto/output/room-added.ouput';
 import { RoomMessageAddedOuput } from './dto/output/room-message-added.ouput';
 
 import { getResult } from '../helpers/code.helper';
@@ -30,7 +29,36 @@ export class RoomsResolver {
     private readonly redisService: RedisService,
   ) {}
 
-  test() {
+  testRoomMessageAddedSub() {
+    let i = 0;
+    setInterval(() => {
+      this.redisService.roomMessageAddedPublish(
+        {
+          user: {
+            _id: Types.ObjectId(),
+            username: 'Bob',
+            email: 'bob@bobo.com',
+            password: '123',
+            registration_information: {
+              token: 'b',
+              date: new Date(),
+              expiration_date: new Date(),
+            },
+            forgot_password: new ForgotPassword(),
+            confirmed: true,
+            rooms: [],
+            profilPic: '',
+          },
+          date: new Date(),
+          message: 'test' + i,
+        },
+        '608429b63978806ff3b7b39e',
+      );
+      i++;
+    }, 5000);
+  }
+
+  testRoomAddSub() {
     let i = 0;
     setInterval(() => {
       this.redisService.roomAddedPublish({
@@ -147,7 +175,7 @@ export class RoomsResolver {
     };
   }
 
-  @Subscription(() => RoomAddedOutput, {
+  @Subscription(() => Room, {
     name: ROOM_ADDED,
   })
   roomAddedHandler() {

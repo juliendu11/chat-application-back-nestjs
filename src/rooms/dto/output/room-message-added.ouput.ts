@@ -4,7 +4,7 @@ import { Message } from '../../entities/sub/message.entity';
 @ObjectType()
 export class RoomMessageAddedOuput {
   @Field(() => Message)
-  roomMessageAdded: Message;
+  message: Message;
 
   @Field(() => String)
   id: string;
