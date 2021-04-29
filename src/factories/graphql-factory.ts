@@ -5,12 +5,14 @@ import * as path from 'path';
 import * as jwt from 'jsonwebtoken';
 import { RedisService } from '../redis/redis.service';
 import { JWTTokenData } from '../types/JWTToken';
+import { MembersService } from '../members/members.service';
 
 @Injectable()
 export class GraphqlQLFactory implements GqlOptionsFactory {
   constructor(
     private readonly config: ConfigService,
     private readonly redisService: RedisService,
+    private readonly memberService: MembersService,
   ) {
     this.config = config;
   }
@@ -33,7 +35,8 @@ export class GraphqlQLFactory implements GqlOptionsFactory {
           const token = connectionParams.headers.authorization;
           if (token) {
             return this.validateToken(token).then((user: JWTTokenData) => {
-              this.redisService.setUserConnected(user.username);
+              this.redisService.setUserConnected(user.username, user);
+              this.memberService.updateMemberOnline(user._id, true);
               return {
                 currentUser: user,
               };
@@ -42,6 +45,10 @@ export class GraphqlQLFactory implements GqlOptionsFactory {
         },
         onDisconnect: async (ws, ctx) => {
           const intialContext = await ctx.initPromise;
+          this.memberService.updateMemberOnline(
+            intialContext.currentUser._id,
+            false,
+          );
           this.redisService.removeUserConnected(
             intialContext.currentUser.username,
           );

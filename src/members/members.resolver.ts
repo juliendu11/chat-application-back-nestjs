@@ -25,6 +25,9 @@ import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../decorators/graphql-current-user.decorator';
 import { JWTTokenData } from '../types/JWTToken';
+import { RedisService } from '../redis/redis.service';
+import { MemberOnlineOutput } from './dto/ouput/member-online.ouput';
+import { MembersInfoOutput } from './dto/ouput/members-info.output';
 
 @Resolver(() => Member)
 export class MembersResolver {
@@ -32,6 +35,7 @@ export class MembersResolver {
     private readonly membersService: MembersService,
     private readonly configService: ConfigService,
     private readonly mailService: MailService,
+    private readonly redisSerivce: RedisService,
   ) {}
 
   @Mutation(() => RegisterMemberOutput)
@@ -142,6 +146,32 @@ export class MembersResolver {
       fieldsList(info),
       true,
     );
+  }
+
+  @Query(() => MemberOnlineOutput)
+  @UseGuards(GqlAuthGuard)
+  async membersOnline(): Promise<MemberOnlineOutput> {
+    const membersOnline = await this.redisSerivce.getUsersConncted();
+    return {
+      result: true,
+      message: '',
+      values: membersOnline,
+    };
+  }
+
+  @Query(() => MembersInfoOutput)
+  @UseGuards(GqlAuthGuard)
+  async membersInfo(): Promise<MembersInfoOutput> {
+    const members = await this.membersService.findAll(
+      ['username', 'email', 'profilPic', 'isOnline'],
+      true,
+    );
+
+    return {
+      result: true,
+      message: '',
+      members: members as Member[],
+    };
   }
 
   @Query(() => String)

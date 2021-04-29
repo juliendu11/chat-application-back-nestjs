@@ -24,6 +24,13 @@ export class MembersService {
     return await this.memberModel.exists({ $or: [{ email }, { username }] });
   }
 
+  async findAll(selectedFields = [], lean = false) {
+    return await this.memberModel
+      .find({})
+      .select(selectedFields.join(' '))
+      .lean(lean);
+  }
+
   async findOne(id: string, selectedFields = [], lean = false) {
     return await this.memberModel
       .findById(Types.ObjectId(id))
@@ -54,6 +61,7 @@ export class MembersService {
         expiration_date: dayjs().add(2, 'days').toDate(),
         token: generateRandomToken(),
       },
+      profilPic: `uploads/pictures/${username}.jpg`,
     });
 
     return {
@@ -94,7 +102,12 @@ export class MembersService {
       code: 200,
       message: '',
       value: {
-        token: this.createJWTToken(member._id, member.email, member.username),
+        token: this.createJWTToken(
+          member._id,
+          member.email,
+          member.username,
+          member.profilPic,
+        ),
         refreshToken: this.createRefreshToken(),
       },
     };
@@ -247,11 +260,28 @@ export class MembersService {
     return member;
   }
 
-  private createJWTToken(_id: string, email: string, username: string) {
+  async updateMemberOnline(id: string, value: boolean) {
+    await this.memberModel.updateOne(
+      { _id: Types.ObjectId(id) },
+      { isOnline: value },
+    );
+  }
+
+  private createJWTToken(
+    _id: string,
+    email: string,
+    username: string,
+    profilPic: string,
+  ) {
     const expHour = this.config.get('jsonwebtoken.time');
     const secret = this.config.get('jsonwebtoken.key');
 
-    const tokenData: JWTTokenData = { email, username, _id: _id.toString() };
+    const tokenData: JWTTokenData = {
+      email,
+      username,
+      profilPic,
+      _id: _id.toString(),
+    };
 
     return jwt.sign(
       { data: tokenData, iat: Math.floor(Date.now() / 1000) - 30 },

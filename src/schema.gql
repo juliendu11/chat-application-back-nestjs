@@ -99,11 +99,31 @@ type Member {
   confirmed: Boolean!
   email: String!
   forgot_password: ForgotPassword!
+  isOnline: Boolean!
   password: String!
   profilPic: String
   registration_information: RegistrationInformation!
   rooms: [Room!]!
   username: String!
+}
+
+type MemberOnlineOutput {
+  message: String!
+  result: Boolean!
+  values: [MemberOnlineOutputUser!]!
+}
+
+type MemberOnlineOutputUser {
+  _id: String!
+  email: String!
+  profilPic: String!
+  username: String!
+}
+
+type MembersInfoOutput {
+  members: [Member!]!
+  message: String!
+  result: Boolean!
 }
 
 type Message {
@@ -129,6 +149,8 @@ type Mutation {
 type Query {
   directMessage(id: Int!): DirectMessage!
   directMessages: [DirectMessage!]!
+  membersInfo: MembersInfoOutput!
+  membersOnline: MemberOnlineOutput!
   myInformation: Member!
   room(id: String!): GetRoomOuput!
   roomMessage(getRoomMessageInput: GetRoomMessageInput!): GetRoomMessageOuput!

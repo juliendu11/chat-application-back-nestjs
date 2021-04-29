@@ -49,6 +49,10 @@ export class Member {
   @Prop({ default: false })
   confirmed: boolean;
 
+  @Field(() => Boolean)
+  @Prop({ default: false })
+  isOnline: boolean;
+
   @Field(() => [Room])
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Room' }] })
   rooms: Types.ObjectId[] | Room[];

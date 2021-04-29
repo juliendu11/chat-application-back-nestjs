@@ -9,6 +9,7 @@ import { Message } from '../rooms/entities/sub/message.entity';
 import { RoomAddedPublish } from './publish-dto/room-added.publish';
 import { RoomMessageAddedPublish } from './publish-dto/room-message-added.publish';
 import { ROOM_ADDED, ROOM_MESSAGE_ADDED } from './redis.pub-sub';
+import { JWTTokenData } from '../types/JWTToken';
 
 const ONLINE_KEY = 'ONLINE';
 
@@ -34,16 +35,30 @@ export class RedisService {
     });
   }
 
-  getOnlineKeyName(username: string) {
-    return `${ONLINE_KEY}.${username}`;
+  private getOnlineKeyName(username: string) {
+    return `${ONLINE_KEY}:${username}`;
   }
 
-  setUserConnected(username: string) {
-    this.redis.set(this.getOnlineKeyName(username), username);
+  setUserConnected(username: string, userInfo: JWTTokenData) {
+    this.redis.set(this.getOnlineKeyName(username), JSON.stringify(userInfo));
   }
 
   removeUserConnected(username: string) {
     this.redis.del(this.getOnlineKeyName(username));
+  }
+
+  async getUsersConncted(): Promise<JWTTokenData[]> {
+    const users: JWTTokenData[] = [];
+
+    const keys = await this.redis.keys(ONLINE_KEY + ':*');
+    await Promise.all(
+      keys.map(async (key) => {
+        const user = await this.redis.get(key);
+        users.push(JSON.parse(user));
+      }),
+    );
+
+    return users;
   }
 
   roomAddedListener() {

@@ -1,6 +1,7 @@
 type JWTTokenData = {
   email: string;
   username: string;
+  profilPic: string;
   _id: string;
 };
 
