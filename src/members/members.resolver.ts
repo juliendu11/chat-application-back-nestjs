@@ -28,6 +28,7 @@ import { JWTTokenData } from '../types/JWTToken';
 import { RedisService } from '../redis/redis.service';
 import { MemberOnlineOutput } from './dto/ouput/member-online.ouput';
 import { MembersInfoOutput } from './dto/ouput/members-info.output';
+import { MembersUpdateProfilPicInput } from './dto/input/members-update-profil-pic-input';
 
 @Resolver(() => Member)
 export class MembersResolver {
@@ -138,6 +139,24 @@ export class MembersResolver {
     };
   }
 
+  @Mutation(() => CommonOutput)
+  @UseGuards(GqlAuthGuard)
+  async membersUpdateProfilPic(
+    @Args('membersUpdateProfilPicInput')
+    membersUpdateProfilPicInput: MembersUpdateProfilPicInput,
+    @CurrentUser() user: JWTTokenData,
+  ): Promise<CommonOutput> {
+    const { code, message } = await this.membersService.updateProfilPic(
+      user._id,
+      membersUpdateProfilPicInput,
+    );
+
+    return {
+      result: getResult(code),
+      message,
+    };
+  }
+
   @Query(() => Member)
   @UseGuards(GqlAuthGuard)
   async myInformation(@CurrentUser() user: JWTTokenData, @Info() info) {
@@ -163,7 +182,7 @@ export class MembersResolver {
   @UseGuards(GqlAuthGuard)
   async membersInfo(): Promise<MembersInfoOutput> {
     const members = await this.membersService.findAll(
-      ['username', 'email', 'profilPic', 'isOnline'],
+      ['_id', 'username', 'email', 'profilPic', 'isOnline'],
       true,
     );
 

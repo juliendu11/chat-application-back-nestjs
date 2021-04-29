@@ -126,6 +126,10 @@ type MembersInfoOutput {
   result: Boolean!
 }
 
+input MembersUpdateProfilPicInput {
+  filesSelected: Upload!
+}
+
 type Message {
   date: DateTime
   message: String!
@@ -139,6 +143,7 @@ type Mutation {
   createRoom(createRoomInput: CreateRoomInput!): CreateRoomOutput!
   forgotPassword(forgotPasswordInput: ForgotPasswordInput!): CommonOutput!
   login(loginMemberInput: LoginMemberInput!): LoginMemberOutput!
+  membersUpdateProfilPic(membersUpdateProfilPicInput: MembersUpdateProfilPicInput!): CommonOutput!
   register(registerMemberInput: RegisterMemberInput!): RegisterMemberOutput!
   removeDirectMessage(id: Int!): DirectMessage!
   removeRoom(id: String!): CommonOutput!
@@ -205,3 +210,6 @@ input UpdateDirectMessageInput {
   exampleField: Int
   id: Int!
 }
+
+"""The `Upload` scalar type represents a file upload."""
+scalar Upload

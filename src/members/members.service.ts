@@ -3,6 +3,9 @@ import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
 import * as dayjs from 'dayjs';
 import * as jwt from 'jsonwebtoken';
+import * as path from 'path';
+import { createWriteStream, ReadStream } from 'fs';
+import { mkdir } from 'fs/promises';
 import { Model, Types } from 'mongoose';
 import { ConfigService, InjectConfig } from 'nestjs-config';
 import { generateRandomToken } from '../helpers/random.helper';
@@ -12,6 +15,7 @@ import { LoginResult } from '../types/LoginResult';
 import { LoginMemberInput } from './dto/input/login-member.input';
 import { RegisterMemberInput } from './dto/input/register-member.input';
 import { Member, MemberDocument } from './entities/member.entity';
+import { MembersUpdateProfilPicInput } from './dto/input/members-update-profil-pic-input';
 
 @Injectable()
 export class MembersService {
@@ -19,6 +23,14 @@ export class MembersService {
     @InjectModel(Member.name) private memberModel: Model<MemberDocument>,
     @InjectConfig() private readonly config: ConfigService,
   ) {}
+
+  private uploadPath = path.resolve(
+    __dirname,
+    '..',
+    '..',
+    'uploads',
+    'pictures',
+  );
 
   async checkExist(username: string, email: string): Promise<boolean> {
     return await this.memberModel.exists({ $or: [{ email }, { username }] });
@@ -36,6 +48,55 @@ export class MembersService {
       .findById(Types.ObjectId(id))
       .select(selectedFields.join(' '))
       .lean(lean);
+  }
+
+  async updateProfilPic(
+    id: string,
+    membersUpdateProfilPicInput: MembersUpdateProfilPicInput,
+  ): Promise<ServiceResponseType<undefined>> {
+    try {
+      if (!membersUpdateProfilPicInput.filesSelected) {
+        return { code: 400, message: 'No file to upload', value: null };
+      }
+
+      const getMember = await this.findOne(id, ['username'], true);
+      if (!getMember) {
+        return { code: 404, message: 'Member account not found', value: null };
+      }
+
+      const link = path.resolve(this.uploadPath, `${getMember.username}.jpg`);
+
+      await mkdir(this.uploadPath, { recursive: true });
+
+      const {
+        createReadStream,
+      } = await membersUpdateProfilPicInput.filesSelected;
+      const stream = createReadStream();
+
+      return await this.writeFile(stream, link);
+    } catch (error) {
+      return {
+        code: 500,
+        message: error.message,
+      };
+    }
+  }
+
+  private async writeFile(
+    stream: ReadStream,
+    link: string,
+  ): Promise<ServiceResponseType<undefined>> {
+    return new Promise((resolve, reject) => {
+      const write = createWriteStream(link);
+      stream
+        .pipe(write)
+        .on('error', (error) => {
+          resolve({ code: 500, message: error.message });
+        })
+        .on('finish', () => {
+          resolve({ code: 200, message: link });
+        });
+    });
   }
 
   async register({
