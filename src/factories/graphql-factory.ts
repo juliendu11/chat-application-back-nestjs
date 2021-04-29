@@ -2,11 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { GqlModuleOptions, GqlOptionsFactory } from '@nestjs/graphql';
 import { ConfigService } from 'nestjs-config';
 import * as path from 'path';
-import jwt from 'jsonwebtoken';
+import * as jwt from 'jsonwebtoken';
+import { RedisService } from '../redis/redis.service';
+import { JWTTokenData } from '../types/JWTToken';
 
 @Injectable()
 export class GraphqlQLFactory implements GqlOptionsFactory {
-  constructor(private readonly config: ConfigService) {
+  constructor(
+    private readonly config: ConfigService,
+    private readonly redisService: RedisService,
+  ) {
     this.config = config;
   }
 
@@ -23,19 +28,25 @@ export class GraphqlQLFactory implements GqlOptionsFactory {
       installSubscriptionHandlers: true,
       uploads: false,
       context: ({ req, res }) => ({ req, res }),
-      // subscriptions: {
-      //   onConnect: (connectionParams: any) => {
-      //     if (connectionParams.authorization) {
-      //       return this.validateToken(connectionParams.authorization).then(
-      //         (user) => {
-      //           return {
-      //             currentUser: user,
-      //           };
-      //         },
-      //       );
-      //     }
-      //   },
-      // },
+      subscriptions: {
+        onConnect: (connectionParams: any, ws) => {
+          const token = connectionParams.headers.authorization;
+          if (token) {
+            return this.validateToken(token).then((user: JWTTokenData) => {
+              this.redisService.setUserConnected(user.username);
+              return {
+                currentUser: user,
+              };
+            });
+          }
+        },
+        onDisconnect: async (ws, ctx) => {
+          const intialContext = await ctx.initPromise;
+          this.redisService.removeUserConnected(
+            intialContext.currentUser.username,
+          );
+        },
+      },
     };
   }
 

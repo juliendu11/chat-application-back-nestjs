@@ -107,7 +107,7 @@ type Member {
 }
 
 type Message {
-  date: DateTime!
+  date: DateTime
   message: String!
   user: Member!
 }
