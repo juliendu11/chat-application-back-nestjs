@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import { ServiceResponseType } from '../interfaces/GraphqlResponse';
 import { Message } from '../rooms/entities/sub/message.entity';
 import { ConversationSendMessageInput } from './dto/input/conversation-send-message.input';
+import { GetConversationMessageValue } from './dto/output/conversation-messages.output';
 import {
   Conversation,
   ConversationDocument,
@@ -15,6 +16,64 @@ export class ConversationsService {
     @InjectModel(Conversation.name)
     private conversationModel: Model<ConversationDocument>,
   ) {}
+
+  async conversationMessages(
+    id: string,
+    skip: number,
+    limit: number,
+  ): Promise<ServiceResponseType<GetConversationMessageValue>> {
+    try {
+      const match = {
+        $match: { _id: Types.ObjectId(id) },
+      };
+
+      const getMessagesLength = await this.conversationModel.aggregate([
+        match,
+        { $project: { messages: { $size: '$messages' } } },
+      ]);
+
+      const messagesLength = getMessagesLength[0].messages;
+
+      const moreAvailable = messagesLength - (skip + limit) > 0;
+      const pageAvailable = Math.ceil(messagesLength / limit);
+
+      const messages = await this.conversationModel.aggregate([
+        match,
+        { $project: { messages: { $reverseArray: '$messages' } } },
+        { $unwind: '$messages' },
+        { $limit: limit + skip },
+        { $skip: skip },
+        {
+          $project: {
+            message: '$messages.message',
+            date: '$messages.date',
+            user: '$messages.user',
+            populate: '$messages.populate',
+          },
+        },
+      ]);
+
+      return {
+        code: 200,
+        message: '',
+        value: {
+          pageAvailable,
+          moreAvailable,
+          messages,
+        },
+      };
+    } catch (error) {
+      return {
+        code: 500,
+        message: error.message,
+        value: {
+          pageAvailable: 0,
+          moreAvailable: false,
+          messages: [],
+        },
+      };
+    }
+  }
 
   async findAllWithPopulate(lean = false) {
     return await this.conversationModel
@@ -44,7 +103,7 @@ export class ConversationsService {
         true,
       );
       if (conversationExist) {
-        await this.addMessage(conversationExist._id, memberId, message);
+        await this.addMessage(conversationExist._id, toMemberId, message);
       } else {
         conversationExist = await this.create(toMemberId, memberId, message);
       }
@@ -71,7 +130,7 @@ export class ConversationsService {
   ) {
     return await this.conversationModel
       .findOne({
-        favoriteFood: {
+        members: {
           $all: [Types.ObjectId(toMemberId), Types.ObjectId(fromMemberId)],
         },
       })

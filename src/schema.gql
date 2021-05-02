@@ -78,6 +78,24 @@ input ForgotPasswordInput {
   email: String!
 }
 
+input GetConversationMessageInput {
+  id: String!
+  limit: Float!
+  skip: Float!
+}
+
+type GetConversationMessageOutput {
+  message: String!
+  result: Boolean!
+  value: GetConversationMessageValue!
+}
+
+type GetConversationMessageValue {
+  messages: [Message!]!
+  moreAvailable: Boolean!
+  pageAvailable: Float!
+}
+
 input GetRoomMessageInput {
   id: String!
   limit: Float!
@@ -170,6 +188,7 @@ type Mutation {
 }
 
 type Query {
+  conversationMessages(getConversationMessageInput: GetConversationMessageInput!): GetConversationMessageOutput!
   conversations: [ConversationsOutput!]!
   membersInfo: MembersInfoOutput!
   membersOnline: MemberOnlineOutput!
