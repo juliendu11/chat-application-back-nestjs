@@ -1,6 +1,7 @@
-import { ObjectType, Field, Int } from '@nestjs/graphql';
+import { ObjectType, Field } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types, Document } from 'mongoose';
+import { Conversation } from '../../conversations/entities/conversation.entity';
 import { Room } from '../../rooms/entities/room.entity';
 
 import {
@@ -56,6 +57,10 @@ export class Member {
   @Field(() => [Room])
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Room' }] })
   rooms: Types.ObjectId[] | Room[];
+
+  @Field(() => [Conversation])
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Conversation' }] })
+  conversations: Types.ObjectId[] | Conversation[];
 }
 export type MemberDocument = Member & Document;
 

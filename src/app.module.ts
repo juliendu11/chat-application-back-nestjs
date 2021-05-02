@@ -12,11 +12,11 @@ import { MongooseFactory } from './factories/mongoose-factory';
 import { MailModule } from './mail/mail.module';
 import { MembersModule } from './members/members.module';
 import { MailerFactory } from './factories/mail-factory';
-import { DirectMessagesModule } from './direct-messages/direct-messages.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { RedisModule } from './redis/redis.module';
 import { AuthModule } from './auth/auth.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { ConversationsModule } from './conversations/conversations.module';
 
 @Module({
   imports: [
@@ -37,9 +37,9 @@ import { ServeStaticModule } from '@nestjs/serve-static';
     AuthModule,
     MembersModule,
     MailModule,
-    DirectMessagesModule,
     RoomsModule,
     RedisModule,
+    ConversationsModule,
   ],
 })
 export class AppModule {
