@@ -8,8 +8,14 @@ import { Room } from '../rooms/entities/room.entity';
 import { Message } from '../rooms/entities/sub/message.entity';
 import { RoomAddedPublish } from './publish-dto/room-added.publish';
 import { RoomMessageAddedPublish } from './publish-dto/room-message-added.publish';
-import { ROOM_ADDED, ROOM_MESSAGE_ADDED } from './redis.pub-sub';
+import {
+  CONVERSATION_NEW_MESSAGE,
+  ROOM_ADDED,
+  ROOM_MESSAGE_ADDED,
+} from './redis.pub-sub';
 import { JWTTokenData } from '../types/JWTToken';
+import { ConversationNewMessagePublish } from './publish-dto/conversation-new-message.publish';
+import { ConversationNewMessageOutput } from '../conversations/dto/output/conversation-new-message.output';
 
 const ONLINE_KEY = 'ONLINE';
 
@@ -82,5 +88,17 @@ export class RedisService {
         id,
       },
     } as RoomMessageAddedPublish);
+  }
+
+  conversatiionNewMessageListener() {
+    return this.redisPubSub.asyncIterator(CONVERSATION_NEW_MESSAGE);
+  }
+
+  conversationNewMessagePublish(
+    conversationNewMessageOutput: ConversationNewMessageOutput,
+  ) {
+    this.redisPubSub.publish(CONVERSATION_NEW_MESSAGE, {
+      conversationNewMessage: conversationNewMessageOutput,
+    } as ConversationNewMessagePublish);
   }
 }

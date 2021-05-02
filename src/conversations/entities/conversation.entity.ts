@@ -18,7 +18,7 @@ export class Conversation {
   members: Types.ObjectId[] | Member[];
 
   @Field(() => [Message])
-  @Prop({ default: [] })
+  @Prop({ type: [MessageSchema] })
   messages: Message[];
 
   @Field(() => Message, { nullable: true })

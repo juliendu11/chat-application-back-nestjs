@@ -30,9 +30,26 @@ type Conversation {
   messages: [Message!]!
 }
 
-input CreateConversationInput {
-  """Example field (placeholder)"""
-  exampleField: Int!
+type ConversationNewMessageOutput {
+  _id: String!
+  last_message: Message
+  members: [Member!]!
+}
+
+input ConversationSendMessageInput {
+  memberId: String!
+  message: String!
+}
+
+type ConversationSendMessageOutput {
+  message: String!
+  result: Boolean!
+}
+
+type ConversationsOutput {
+  _id: String!
+  last_message: Message
+  members: [Member!]!
 }
 
 input CreateRoomInput {
@@ -142,21 +159,18 @@ type Message {
 type Mutation {
   addRoomMessage(addRoomMessageInput: AddRoomMessageInput!): AddRoomMessageOuput!
   confirmAccount(confirmAccountInput: ConfirmMemberInput!): CommonOutput!
-  createConversation(createConversationInput: CreateConversationInput!): Conversation!
+  conversationSendMessage(conversationSendMessageInput: ConversationSendMessageInput!): ConversationSendMessageOutput!
   createRoom(createRoomInput: CreateRoomInput!): CreateRoomOutput!
   forgotPassword(forgotPasswordInput: ForgotPasswordInput!): CommonOutput!
   login(loginMemberInput: LoginMemberInput!): LoginMemberOutput!
   membersUpdateProfilPic(membersUpdateProfilPicInput: MembersUpdateProfilPicInput!): CommonOutput!
   register(registerMemberInput: RegisterMemberInput!): RegisterMemberOutput!
-  removeConversation(id: Int!): Conversation!
   removeRoom(id: String!): CommonOutput!
   resetPassword(resetPasswordInput: ResetPasswordInput!): CommonOutput!
-  updateConversation(updateConversationInput: UpdateConversationInput!): Conversation!
 }
 
 type Query {
-  conversation(id: Int!): Conversation!
-  conversations: [Conversation!]!
+  conversations: [ConversationsOutput!]!
   membersInfo: MembersInfoOutput!
   membersOnline: MemberOnlineOutput!
   myInformation: Member!
@@ -204,14 +218,9 @@ type RoomMessageAddedOuput {
 }
 
 type Subscription {
+  conversationNewMessage: ConversationNewMessageOutput!
   roomAdded: Room!
   roomMessageAdded: RoomMessageAddedOuput!
-}
-
-input UpdateConversationInput {
-  """Example field (placeholder)"""
-  exampleField: Int
-  id: Int!
 }
 
 """The `Upload` scalar type represents a file upload."""

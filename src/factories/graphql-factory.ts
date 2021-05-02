@@ -32,33 +32,33 @@ export class GraphqlQLFactory implements GqlOptionsFactory {
       context: ({ req, res }) => ({ req, res }),
       subscriptions: {
         onConnect: async (connectionParams: any, ws) => {
-          const token = connectionParams.headers.authorization;
-          if (token) {
-            try {
-              const user: JWTTokenData = await this.validateToken(token);
-              this.redisService.setUserConnected(user.username, user);
-              this.memberService.updateMemberOnline(user._id, true);
-              return {
-                currentUser: user,
-              };
-            } catch (error) {
-              ws.close(401);
-            }
-          }
+          // const token = connectionParams.headers.authorization;
+          // if (token) {
+          //   try {
+          //     const user: JWTTokenData = await this.validateToken(token);
+          //     this.redisService.setUserConnected(user.username, user);
+          //     this.memberService.updateMemberOnline(user._id, true);
+          //     return {
+          //       currentUser: user,
+          //     };
+          //   } catch (error) {
+          //     ws.close(401);
+          //   }
+          // }
         },
         onDisconnect: async (ws, ctx) => {
-          const intialContext = await ctx.initPromise;
-          if (!intialContext.currentUser) {
-            ws.close(401);
-            return;
-          }
-          this.memberService.updateMemberOnline(
-            intialContext.currentUser._id,
-            false,
-          );
-          this.redisService.removeUserConnected(
-            intialContext.currentUser.username,
-          );
+          // const intialContext = await ctx.initPromise;
+          // if (!intialContext.currentUser) {
+          //   ws.close(401);
+          //   return;
+          // }
+          // this.memberService.updateMemberOnline(
+          //   intialContext.currentUser._id,
+          //   false,
+          // );
+          // this.redisService.removeUserConnected(
+          //   intialContext.currentUser.username,
+          // );
         },
       },
     };

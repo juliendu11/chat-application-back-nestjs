@@ -1,35 +1,123 @@
-import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
+import { Resolver, Mutation, Args, Subscription, Query } from '@nestjs/graphql';
+import { Types } from 'mongoose';
+import { GqlAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../decorators/graphql-current-user.decorator';
+import { getResult } from '../helpers/code.helper';
+import { Member } from '../members/entities/member.entity';
+import { ForgotPassword } from '../members/entities/sub/forgot-password.entity';
+import { CONVERSATION_NEW_MESSAGE } from '../redis/redis.pub-sub';
+import { RedisService } from '../redis/redis.service';
+import { JWTTokenData } from '../types/JWTToken';
 import { ConversationsService } from './conversations.service';
-import { Conversation } from './entities/conversation.entity';
-import { CreateConversationInput } from './dto/create-conversation.input';
-import { UpdateConversationInput } from './dto/update-conversation.input';
+import { ConversationSendMessageInput } from './dto/input/conversation-send-message.input';
+import { ConversationNewMessageOutput } from './dto/output/conversation-new-message.output';
+import { ConversationSendMessageOutput } from './dto/output/conversation-send-message.output';
+import { ConversationsOutput } from './dto/output/conversations.output';
 
-@Resolver(() => Conversation)
+@Resolver()
 export class ConversationsResolver {
-  constructor(private readonly conversationsService: ConversationsService) {}
-
-  @Mutation(() => Conversation)
-  createConversation(@Args('createConversationInput') createConversationInput: CreateConversationInput) {
-    return this.conversationsService.create(createConversationInput);
+  constructor(
+    private readonly conversationsService: ConversationsService,
+    private readonly redisService: RedisService,
+  ) {
+    // setInterval(() => {
+    //   this.test();
+    // }, 200);
   }
 
-  @Query(() => [Conversation], { name: 'conversations' })
-  findAll() {
-    return this.conversationsService.findAll();
+  test() {
+    this.redisService.conversationNewMessagePublish({
+      last_message: {
+        user: {
+          _id: Types.ObjectId(),
+          username: 'Bob',
+          email: 'bob@bobo.com',
+          password: '123',
+          registration_information: {
+            token: 'b',
+            date: new Date(),
+            expiration_date: new Date(),
+          },
+          forgot_password: new ForgotPassword(),
+          confirmed: true,
+          rooms: [],
+          profilPic: '',
+          isOnline: true,
+          conversations: [],
+        },
+        date: new Date(),
+        message: 'test',
+      },
+      _id: Types.ObjectId(),
+      members: [
+        {
+          _id: Types.ObjectId(),
+          username: 'Bob',
+          email: 'bob@bobo.com',
+          password: '123',
+          registration_information: {
+            token: 'b',
+            date: new Date(),
+            expiration_date: new Date(),
+          },
+          forgot_password: new ForgotPassword(),
+          confirmed: true,
+          rooms: [],
+          profilPic: '',
+          isOnline: true,
+          conversations: [],
+        },
+      ],
+    });
   }
 
-  @Query(() => Conversation, { name: 'conversation' })
-  findOne(@Args('id', { type: () => Int }) id: number) {
-    return this.conversationsService.findOne(id);
+  @Query(() => [ConversationsOutput], { name: 'conversations' })
+  @UseGuards(GqlAuthGuard)
+  async findAll(): Promise<ConversationsOutput[]> {
+    return (await this.conversationsService.findAllWithPopulate()) as ConversationsOutput[];
   }
 
-  @Mutation(() => Conversation)
-  updateConversation(@Args('updateConversationInput') updateConversationInput: UpdateConversationInput) {
-    return this.conversationsService.update(updateConversationInput.id, updateConversationInput);
+  @Mutation(() => ConversationSendMessageOutput)
+  @UseGuards(GqlAuthGuard)
+  async conversationSendMessage(
+    @Args('conversationSendMessageInput')
+    conversationSendMessageInput: ConversationSendMessageInput,
+    @CurrentUser() user: JWTTokenData,
+  ): Promise<ConversationSendMessageOutput> {
+    const {
+      code,
+      message,
+      value,
+    } = await this.conversationsService.addOrCreate(
+      user._id,
+      conversationSendMessageInput,
+    );
+
+    const result = getResult(code);
+    if (result) {
+      const conversation = await this.conversationsService.findOneByIdWithPopulate(
+        value._id.toString(),
+        true,
+      );
+
+      this.redisService.conversationNewMessagePublish({
+        last_message: conversation.last_message,
+        _id: conversation._id,
+        members: conversation.members as Member[],
+      });
+    }
+
+    return {
+      result,
+      message,
+    };
   }
 
-  @Mutation(() => Conversation)
-  removeConversation(@Args('id', { type: () => Int }) id: number) {
-    return this.conversationsService.remove(id);
+  @Subscription(() => ConversationNewMessageOutput, {
+    name: CONVERSATION_NEW_MESSAGE,
+  })
+  conversationNewMessageHandler() {
+    return this.redisService.conversatiionNewMessageListener();
   }
 }
