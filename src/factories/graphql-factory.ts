@@ -31,20 +31,27 @@ export class GraphqlQLFactory implements GqlOptionsFactory {
       uploads: false,
       context: ({ req, res }) => ({ req, res }),
       subscriptions: {
-        onConnect: (connectionParams: any, ws) => {
+        onConnect: async (connectionParams: any, ws) => {
           const token = connectionParams.headers.authorization;
           if (token) {
-            return this.validateToken(token).then((user: JWTTokenData) => {
+            try {
+              const user: JWTTokenData = await this.validateToken(token);
               this.redisService.setUserConnected(user.username, user);
               this.memberService.updateMemberOnline(user._id, true);
               return {
                 currentUser: user,
               };
-            });
+            } catch (error) {
+              ws.close(401);
+            }
           }
         },
         onDisconnect: async (ws, ctx) => {
           const intialContext = await ctx.initPromise;
+          if (!intialContext.currentUser) {
+            ws.close(401);
+            return;
+          }
           this.memberService.updateMemberOnline(
             intialContext.currentUser._id,
             false,
@@ -57,7 +64,7 @@ export class GraphqlQLFactory implements GqlOptionsFactory {
     };
   }
 
-  validateToken(authToken: string) {
+  validateToken(authToken: string): Promise<JWTTokenData> {
     return new Promise((resolve, reject) => {
       authToken = authToken.replace('Bearer ', '');
       jwt.verify(
