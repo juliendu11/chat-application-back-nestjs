@@ -6,6 +6,8 @@ import * as jwt from 'jsonwebtoken';
 import { RedisService } from '../redis/redis.service';
 import { JWTTokenData } from '../types/JWTToken';
 import { MembersService } from '../members/members.service';
+import { MemberOnlineOutputUser } from 'src/members/dto/ouput/member-online.ouput';
+import { AuthenticationError } from 'apollo-server-express';
 
 @Injectable()
 export class GraphqlQLFactory implements GqlOptionsFactory {
@@ -32,33 +34,45 @@ export class GraphqlQLFactory implements GqlOptionsFactory {
       context: ({ req, res }) => ({ req, res }),
       subscriptions: {
         onConnect: async (connectionParams: any, ws) => {
-          // const token = connectionParams.headers.authorization;
-          // if (token) {
-          //   try {
-          //     const user: JWTTokenData = await this.validateToken(token);
-          //     this.redisService.setUserConnected(user.username, user);
-          //     this.memberService.updateMemberOnline(user._id, true);
-          //     return {
-          //       currentUser: user,
-          //     };
-          //   } catch (error) {
-          //     ws.close(401);
-          //   }
-          // }
+          try {
+            const token = connectionParams.headers.authorization;
+            if (!token) {
+              throw new AuthenticationError("No token")
+            }
+            const user: JWTTokenData = await this.validateToken(token);
+            this.redisService.setUserConnected(user.username, user);
+            this.memberService.updateMemberOnline(user._id, true);
+            this.redisService.memberOnlinePublish(
+              user as MemberOnlineOutputUser,
+            );
+
+            return {
+              currentUser: user,
+            };
+          } catch (error) {
+            ws.close(401, error);
+          }
         },
         onDisconnect: async (ws, ctx) => {
-          // const intialContext = await ctx.initPromise;
-          // if (!intialContext.currentUser) {
-          //   ws.close(401);
-          //   return;
-          // }
-          // this.memberService.updateMemberOnline(
-          //   intialContext.currentUser._id,
-          //   false,
-          // );
-          // this.redisService.removeUserConnected(
-          //   intialContext.currentUser.username,
-          // );
+          try {
+            const intialContext = await ctx.initPromise;
+            if (!intialContext.currentUser) {
+              ws.close(401);
+              return;
+            }
+            this.memberService.updateMemberOnline(
+              intialContext.currentUser._id,
+              false,
+            );
+            this.redisService.removeUserConnected(
+              intialContext.currentUser.username,
+            );
+            this.redisService.memberOfflinePublish(
+              intialContext.currentUser as MemberOnlineOutputUser,
+            );
+          } catch (error) {
+            ws.close(401, error);
+          }
         },
       },
     };

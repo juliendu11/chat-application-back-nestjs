@@ -10,12 +10,17 @@ import { RoomAddedPublish } from './publish-dto/room-added.publish';
 import { RoomMessageAddedPublish } from './publish-dto/room-message-added.publish';
 import {
   CONVERSATION_NEW_MESSAGE,
+  MEMBER_OFFLINE,
+  MEMBER_ONLINE,
   ROOM_ADDED,
   ROOM_MESSAGE_ADDED,
 } from './redis.pub-sub';
 import { JWTTokenData } from '../types/JWTToken';
 import { ConversationNewMessagePublish } from './publish-dto/conversation-new-message.publish';
 import { ConversationNewMessageOutput } from '../conversations/dto/output/conversation-new-message.output';
+import { MemberOnlineOutputUser } from 'src/members/dto/ouput/member-online.ouput';
+import { MemberOnlinePublish } from './publish-dto/member-online.publish';
+import { MemberOfflinePublish } from './publish-dto/member-offline.publish';
 
 const ONLINE_KEY = 'ONLINE';
 
@@ -100,5 +105,29 @@ export class RedisService {
     this.redisPubSub.publish(CONVERSATION_NEW_MESSAGE, {
       conversationNewMessage: conversationNewMessageOutput,
     } as ConversationNewMessagePublish);
+  }
+
+  memberOnlineListener(){
+    return this.redisPubSub.asyncIterator(MEMBER_ONLINE)
+  }
+
+  memberOnlinePublish(
+    memberOnline: MemberOnlineOutputUser,
+  ) {
+    this.redisPubSub.publish(MEMBER_ONLINE, {
+      memberOnline,
+    } as MemberOnlinePublish);
+  }
+
+  memberOfflineListener(){
+    return this.redisPubSub.asyncIterator(MEMBER_OFFLINE)
+  }
+
+  memberOfflinePublish(
+    memberOffline: MemberOnlineOutputUser,
+  ) {
+    this.redisPubSub.publish(MEMBER_OFFLINE, {
+      memberOffline,
+    } as MemberOfflinePublish);
   }
 }

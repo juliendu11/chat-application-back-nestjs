@@ -5,6 +5,7 @@ import {
   Context,
   Info,
   Query,
+  Subscription,
 } from '@nestjs/graphql';
 import { Response } from 'express';
 import { fieldsList } from 'graphql-fields-list';
@@ -26,9 +27,11 @@ import { GqlAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../decorators/graphql-current-user.decorator';
 import { JWTTokenData } from '../types/JWTToken';
 import { RedisService } from '../redis/redis.service';
-import { MemberOnlineOutput } from './dto/ouput/member-online.ouput';
+import { MemberOnlineOutput, MemberOnlineOutputUser } from './dto/ouput/member-online.ouput';
 import { MembersInfoOutput } from './dto/ouput/members-info.output';
 import { MembersUpdateProfilPicInput } from './dto/input/members-update-profil-pic-input';
+import { MEMBER_OFFLINE, MEMBER_ONLINE } from 'src/redis/redis.pub-sub';
+import { RoomMessageAddedOuput } from 'src/rooms/dto/output/room-message-added.ouput';
 
 @Resolver(() => Member)
 export class MembersResolver {
@@ -36,7 +39,7 @@ export class MembersResolver {
     private readonly membersService: MembersService,
     private readonly configService: ConfigService,
     private readonly mailService: MailService,
-    private readonly redisSerivce: RedisService,
+    private readonly redisService: RedisService,
   ) {}
 
   @Mutation(() => RegisterMemberOutput)
@@ -170,7 +173,7 @@ export class MembersResolver {
   @Query(() => MemberOnlineOutput)
   @UseGuards(GqlAuthGuard)
   async membersOnline(): Promise<MemberOnlineOutput> {
-    const membersOnline = await this.redisSerivce.getUsersConncted();
+    const membersOnline = await this.redisService.getUsersConncted();
     return {
       result: true,
       message: '',
@@ -196,5 +199,19 @@ export class MembersResolver {
   @Query(() => String)
   sayHello() {
     return 'Hello';
+  }
+
+  @Subscription(() => MemberOnlineOutputUser, {
+    name: MEMBER_ONLINE,
+  })
+  memberOnlineHandler() {
+    return this.redisService.memberOnlineListener();
+  }
+
+  @Subscription(() => MemberOnlineOutputUser, {
+    name: MEMBER_OFFLINE,
+  })
+  memberOfflineHandler() {
+    return this.redisService.memberOfflineListener();
   }
 }

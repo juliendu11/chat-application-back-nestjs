@@ -78,16 +78,16 @@ export class ConversationsService {
   async findAllWithPopulate(memberId:string, lean = false) {
     return await this.conversationModel
       .find({members:{$in:[Types.ObjectId(memberId)]}})
-      .populate('last_message.user', 'email username _id profilPic')
-      .populate('members', 'email username _id profilPic')
+      .populate('last_message.user', 'email username _id profilPic isOnline')
+      .populate('members', 'email username _id profilPic isOnline')
       .lean(lean);
   }
 
   async findOneByIdWithPopulate(id: string, lean = false) {
     return await this.conversationModel
       .findById(Types.ObjectId(id))
-      .populate('last_message.user', 'email username _id profilPic')
-      .populate('members', 'email username _id profilPic')
+      .populate('last_message.user', 'email username _id profilPic isOnline')
+      .populate('members', 'email username _id profilPic isOnline')
       .lean(lean);
   }
 

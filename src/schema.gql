@@ -238,6 +238,8 @@ type RoomMessageAddedOuput {
 
 type Subscription {
   conversationNewMessage: ConversationNewMessageOutput!
+  memberOffline: MemberOnlineOutputUser!
+  memberOnline: MemberOnlineOutputUser!
   roomAdded: Room!
   roomMessageAdded: RoomMessageAddedOuput!
 }
