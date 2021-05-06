@@ -90,7 +90,7 @@ export class RedisService {
     } as RoomMessageAddedPublish);
   }
 
-  conversatiionNewMessageListener() {
+  conversationNewMessageListener() {
     return this.redisPubSub.asyncIterator(CONVERSATION_NEW_MESSAGE);
   }
 

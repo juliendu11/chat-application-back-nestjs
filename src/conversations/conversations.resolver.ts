@@ -78,8 +78,8 @@ export class ConversationsResolver {
 
   @Query(() => [ConversationsOutput], { name: 'conversations' })
   @UseGuards(GqlAuthGuard)
-  async findAll(): Promise<ConversationsOutput[]> {
-    return (await this.conversationsService.findAllWithPopulate()) as ConversationsOutput[];
+  async findAll(@CurrentUser() user: JWTTokenData): Promise<ConversationsOutput[]> {
+    return (await this.conversationsService.findAllWithPopulate(user._id, true)) as ConversationsOutput[];
   }
 
   @Query(() => GetConversationMessageOutput)
@@ -155,6 +155,6 @@ export class ConversationsResolver {
     name: CONVERSATION_NEW_MESSAGE,
   })
   conversationNewMessageHandler() {
-    return this.redisService.conversatiionNewMessageListener();
+    return this.redisService.conversationNewMessageListener();
   }
 }

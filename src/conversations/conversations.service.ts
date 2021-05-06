@@ -75,9 +75,9 @@ export class ConversationsService {
     }
   }
 
-  async findAllWithPopulate(lean = false) {
+  async findAllWithPopulate(memberId:string, lean = false) {
     return await this.conversationModel
-      .find({})
+      .find({members:{$in:[Types.ObjectId(memberId)]}})
       .populate('last_message.user', 'email username _id profilPic')
       .populate('members', 'email username _id profilPic')
       .lean(lean);
