@@ -25,6 +25,7 @@ import { Member } from '../members/entities/member.entity';
 import { Message } from './entities/sub/message.entity';
 import { GetRoomMessageOuput } from './dto/output/get-room-message.ouput';
 import { GetRoomMessageInput } from './dto/input/get-room-message.input';
+import { GetRoomsOuput } from './dto/output/get-rooms.output';
 @Resolver(() => Room)
 export class RoomsResolver {
   constructor(
@@ -32,72 +33,6 @@ export class RoomsResolver {
     private readonly memberService: MembersService,
     private readonly redisService: RedisService,
   ) {}
-
-  testRoomMessageAddedSub() {
-    let i = 0;
-    setInterval(() => {
-      this.redisService.roomMessageAddedPublish(
-        {
-          user: {
-            _id: Types.ObjectId(),
-            username: 'Bob',
-            email: 'bob@bobo.com',
-            password: '123',
-            registration_information: {
-              token: 'b',
-              date: new Date(),
-              expiration_date: new Date(),
-            },
-            forgot_password: new ForgotPassword(),
-            confirmed: true,
-            rooms: [],
-            profilPic: '',
-            isOnline: true,
-            conversations: [],
-          },
-          date: new Date(),
-          message: 'test' + i,
-        },
-        '608429b63978806ff3b7b39e',
-      );
-      i++;
-    }, 5000);
-  }
-
-  testRoomAddSub() {
-    let i = 0;
-    setInterval(() => {
-      this.redisService.roomAddedPublish({
-        _id: Types.ObjectId(),
-        name: 'Test ' + i,
-        isPrivate: false,
-        messages: [],
-        last_message: {
-          message: 'Hey',
-          date: new Date(),
-          user: {
-            _id: Types.ObjectId(),
-            username: 'Bob',
-            email: 'bob@bobo.com',
-            password: '123',
-            registration_information: {
-              token: 'b',
-              date: new Date(),
-              expiration_date: new Date(),
-            },
-            forgot_password: new ForgotPassword(),
-            confirmed: true,
-            rooms: [],
-            profilPic: '',
-            isOnline: true,
-            conversations: [],
-          },
-        },
-        member: Types.ObjectId(),
-      });
-      i++;
-    }, 2000);
-  }
 
   @Mutation(() => CreateRoomOutput)
   @UseGuards(GqlAuthGuard)
@@ -127,10 +62,16 @@ export class RoomsResolver {
     this.redisService.roomAddedPublish(value);
   }
 
-  @Query(() => [Room], { name: 'rooms' })
+  @Query(() => GetRoomsOuput, { name: 'rooms' })
   @UseGuards(GqlAuthGuard)
-  async findAll(): Promise<Room[]> {
-    return await this.roomsService.findAll();
+  async findAll(): Promise<GetRoomsOuput> {
+    const {code, message, value} = await this.roomsService.findAll();
+
+    return {
+      result:getResult(code),
+      message,
+      value
+    }
   }
 
   @Query(() => GetRoomOuput, { name: 'room' })
@@ -153,16 +94,6 @@ export class RoomsResolver {
       getRoomMessageInput.id,
       getRoomMessageInput.skip,
       getRoomMessageInput.limit,
-    );
-
-    await Promise.all(
-      value.messages.map(async (message) => {
-        message.user = (await this.memberService.findOne(
-          message.user.toString(),
-          ['_id', 'username', 'email', 'profilPic'],
-          true,
-        )) as Member;
-      }),
     );
 
     return {
@@ -205,7 +136,11 @@ export class RoomsResolver {
       ['_id', 'username', 'email', 'profilPic'],
       true,
     );
-    value.user = member as Member;
+    if(!getResult(member.code)||!member.value){
+      throw new Error(`Unable to find ${value.user} for publish new room message`)
+    }
+
+    value.user = member.value as Member;
     this.redisService.roomMessageAddedPublish(value, addRoomMessageInput.id);
   }
 

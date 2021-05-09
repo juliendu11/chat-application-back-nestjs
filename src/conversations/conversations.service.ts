@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { getResult } from 'src/helpers/code.helper';
 import { Member } from 'src/members/entities/member.entity';
 import { MembersService } from 'src/members/members.service';
 import { ServiceResponseType } from '../interfaces/GraphqlResponse';
@@ -56,15 +57,17 @@ export class ConversationsService {
         },
       ]);
 
-      await Promise.all(
-        messages.map(async (message) => {
-          message.user = (await this.memberService.findOne(
-            message.user.toString(),
-            ['_id', 'username', 'email', 'profilPic'],
-            true,
-          )) as Member;
-        }),
-      );
+      await Promise.all(messages.map(async (message) => {
+        const getMember = await this.memberService.findOne(message.user.toString(),
+        ['_id', 'username', 'email', 'profilPic'],
+        true)
+  
+        if(!getResult(getMember.code) || !getMember.value){
+          throw new Error(`Unable to find ${message.user} for populate message`)
+        }
+
+        message.user = getMember.value
+      }))
 
       return {
         code: 200,

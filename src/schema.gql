@@ -126,6 +126,12 @@ type GetRoomOuput {
   value: Room!
 }
 
+type GetRoomsOuput {
+  message: String!
+  result: Boolean!
+  value: [Room!]!
+}
+
 input LoginMemberInput {
   id: String!
   password: String!
@@ -201,7 +207,7 @@ type Query {
   myInformation: Member!
   room(id: String!): GetRoomOuput!
   roomMessage(getRoomMessageInput: GetRoomMessageInput!): GetRoomMessageOuput!
-  rooms: [Room!]!
+  rooms: GetRoomsOuput!
   sayHello: String!
 }
 

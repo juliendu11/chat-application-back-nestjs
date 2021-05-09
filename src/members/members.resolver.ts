@@ -32,6 +32,7 @@ import { MembersInfoOutput } from './dto/ouput/members-info.output';
 import { MembersUpdateProfilPicInput } from './dto/input/members-update-profil-pic-input';
 import { MEMBER_OFFLINE, MEMBER_ONLINE } from 'src/redis/redis.pub-sub';
 import { RoomMessageAddedOuput } from 'src/rooms/dto/output/room-message-added.ouput';
+import { LoginResult } from 'src/types/LoginResult';
 
 @Resolver(() => Member)
 export class MembersResolver {
@@ -123,16 +124,7 @@ export class MembersResolver {
 
     const result = getResult(code);
     if (result) {
-      (ctx.res as Response).cookie(
-        this.configService.get('token.refreshTokenName'),
-        value.refreshToken,
-        {
-          maxAge: 2147483647,
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
-        },
-      );
+      this.generateRefreshTokenCookie(ctx, value);
     }
 
     return {
@@ -140,6 +132,19 @@ export class MembersResolver {
       message,
       token: value ? value.token : '',
     };
+  }
+
+  private generateRefreshTokenCookie(ctx: any, value: LoginResult) {
+    (ctx.res as Response).cookie(
+      this.configService.get('token.refreshTokenName'),
+      value.refreshToken,
+      {
+        maxAge: 2147483647,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+      }
+    );
   }
 
   @Mutation(() => CommonOutput)
@@ -184,15 +189,15 @@ export class MembersResolver {
   @Query(() => MembersInfoOutput)
   @UseGuards(GqlAuthGuard)
   async membersInfo(): Promise<MembersInfoOutput> {
-    const members = await this.membersService.findAll(
+    const {code, message, value} = await this.membersService.findAll(
       ['_id', 'username', 'email', 'profilPic', 'isOnline'],
       true,
     );
 
     return {
-      result: true,
-      message: '',
-      members: members as Member[],
+      result: getResult(code),
+      message,
+      members: value,
     };
   }
 

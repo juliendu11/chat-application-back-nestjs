@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { getResult } from 'src/helpers/code.helper';
+import { MembersService } from 'src/members/members.service';
 import { ServiceResponseType } from '../interfaces/GraphqlResponse';
 import { CreateRoomInput } from './dto/input/create-room.input';
 import { GetRoomMessageValue } from './dto/output/get-room-message.ouput';
@@ -9,7 +11,10 @@ import { Message } from './entities/sub/message.entity';
 
 @Injectable()
 export class RoomsService {
-  constructor(@InjectModel(Room.name) private roomModel: Model<RoomDocument>) {}
+  constructor(
+    @InjectModel(Room.name) private roomModel: Model<RoomDocument>,
+    private memberService: MembersService,
+  ) {}
 
   async create(
     createRoomInput: CreateRoomInput,
@@ -35,19 +40,31 @@ export class RoomsService {
     }
   }
 
-  async findAll(): Promise<Room[]> {
-    const rooms = await this.roomModel.find({});
-    await Promise.all(
-      rooms.map(async (room) => {
-        await room
-          .populate({
-            path: 'last_message.user',
-            select: '_id email username profilPic',
-          })
-          .execPopulate();
-      }),
-    );
-    return rooms;
+  async findAll(): Promise<ServiceResponseType<Room[]>> {
+    try {
+      const rooms = await this.roomModel.find({});
+      await Promise.all(
+        rooms.map(async (room) => {
+          await room
+            .populate({
+              path: 'last_message.user',
+              select: '_id email username profilPic',
+            })
+            .execPopulate();
+        }),
+      );
+      return {
+        code: 200,
+        message: '',
+        value: rooms,
+      };
+    } catch (error) {
+      return {
+        code: 500,
+        message: error.message,
+        value: [],
+      };
+    }
   }
 
   async findOne(id: string): Promise<ServiceResponseType<Room | null>> {
@@ -104,6 +121,24 @@ export class RoomsService {
           },
         },
       ]);
+
+      await Promise.all(
+        messages.map(async (message) => {
+          const getMember = await this.memberService.findOne(
+            message.user.toString(),
+            ['_id', 'username', 'email', 'profilPic'],
+            true,
+          );
+
+          if (!getResult(getMember.code) || !getMember.value) {
+            throw new Error(
+              `Unable to find ${message.user} for populate message`,
+            );
+          }
+
+          message.user = getMember.value;
+        }),
+      );
 
       return {
         code: 200,
