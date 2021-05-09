@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { NestjsWinstonLoggerService } from 'nestjs-winston-logger';
 import { getResult } from 'src/helpers/code.helper';
 import { Member } from 'src/members/entities/member.entity';
 import { MembersService } from 'src/members/members.service';
@@ -18,8 +19,11 @@ export class ConversationsService {
   constructor(
     @InjectModel(Conversation.name)
     private conversationModel: Model<ConversationDocument>,
-    private memberService:MembersService
-  ) {}
+    private memberService: MembersService,
+    private logger: NestjsWinstonLoggerService,
+  ) {
+    logger.setContext(ConversationsService.name);
+  }
 
   async conversationMessages(
     id: string,
@@ -27,6 +31,14 @@ export class ConversationsService {
     limit: number,
   ): Promise<ServiceResponseType<GetConversationMessageValue>> {
     try {
+      this.logger.log(
+        `>>>> [conversationMessages] Use with ${JSON.stringify({
+          id,
+          skip,
+          limit,
+        })}`,
+      );
+
       const match = {
         $match: { _id: Types.ObjectId(id) },
       };
@@ -57,19 +69,25 @@ export class ConversationsService {
         },
       ]);
 
-      await Promise.all(messages.map(async (message) => {
-        const getMember = await this.memberService.findOne(message.user.toString(),
-        ['_id', 'username', 'email', 'profilPic'],
-        true)
-  
-        if(!getResult(getMember.code) || !getMember.value){
-          throw new Error(`Unable to find ${message.user} for populate message`)
-        }
+      await Promise.all(
+        messages.map(async (message) => {
+          const getMember = await this.memberService.findOne(
+            message.user.toString(),
+            ['_id', 'username', 'email', 'profilPic'],
+            true,
+          );
 
-        message.user = getMember.value
-      }))
+          if (!getResult(getMember.code) || !getMember.value) {
+            throw new Error(
+              `Unable to find ${message.user} for populate message`,
+            );
+          }
 
-      return {
+          message.user = getMember.value;
+        }),
+      );
+
+      const response = {
         code: 200,
         message: '',
         value: {
@@ -78,7 +96,15 @@ export class ConversationsService {
           messages,
         },
       };
+
+      this.logger.log(
+        `<<<< [conversationMessages] Response: ${JSON.stringify({ response })}`,
+      );
+
+      return response;
     } catch (error) {
+      this.logger.error(`<<<< [conversationMessages] Exception`, error);
+
       return {
         code: 500,
         message: error.message,
@@ -91,35 +117,59 @@ export class ConversationsService {
     }
   }
 
-  async findAllWithPopulate(memberId:string, lean = false):Promise<ServiceResponseType<Conversation[]>> {
+  async findAllWithPopulate(
+    memberId: string,
+    lean = false,
+  ): Promise<ServiceResponseType<Conversation[]>> {
     try {
+      this.logger.log(
+        `>>>> [findAllWithPopulate] Use with ${JSON.stringify({
+          memberId,
+          lean,
+        })}`,
+      );
+
       const conversations = await this.conversationModel
-      .find({members:{$in:[Types.ObjectId(memberId)]}})
-      .populate('last_message.user', 'email username _id profilPic isOnline')
-      .populate('members', 'email username _id profilPic isOnline')
-      .lean(lean);
+        .find({ members: { $in: [Types.ObjectId(memberId)] } })
+        .populate('last_message.user', 'email username _id profilPic isOnline')
+        .populate('members', 'email username _id profilPic isOnline')
+        .lean(lean);
+
+      const response = {
+        code: 200,
+        message: '',
+        value: conversations as Conversation[],
+      };
+
+      this.logger.log(
+        `<<<< [findAllWithPopulate] Response: ${JSON.stringify({ response })}`,
+      );
+
+      return response;
+    } catch (error) {
+      this.logger.error(`<<<< [findAllWithPopulate] Exception`, error);
 
       return {
-        code:200,
-        message:"",
-        value:conversations as Conversation[]
-      }
-    } catch (error) {
-      return {
-        code:500,
-        message:error.message,
-        value:[]
-      }
+        code: 500,
+        message: error.message,
+        value: [],
+      };
     }
   }
-
- 
 
   async addOrCreate(
     toMemberId: string,
     { memberId, message }: ConversationSendMessageInput,
   ): Promise<ServiceResponseType<Conversation | null>> {
     try {
+      this.logger.log(
+        `>>>> [addOrCreate] Use with ${JSON.stringify({
+          toMemberId,
+          memberId,
+          message,
+        })}`,
+      );
+
       let conversationExist = await this.findOne(
         toMemberId,
         memberId,
@@ -137,12 +187,20 @@ export class ConversationsService {
         true,
       );
 
-      return {
+      const response = {
         code: 200,
         message: '',
         value: conversation as ConversationDocument,
       };
+
+      this.logger.log(
+        `<<<< [addOrCreate] Response: ${JSON.stringify({ response })}`,
+      );
+
+      return response;
     } catch (error) {
+      this.logger.error(`<<<< [addOrCreate] Exception`, error);
+
       return {
         code: 500,
         message: error.message,

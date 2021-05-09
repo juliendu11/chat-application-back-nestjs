@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { NestjsWinstonLoggerService } from 'nestjs-winston-logger';
 import { getResult } from 'src/helpers/code.helper';
 import { MembersService } from 'src/members/members.service';
 import { ServiceResponseType } from '../interfaces/GraphqlResponse';
@@ -14,24 +15,40 @@ export class RoomsService {
   constructor(
     @InjectModel(Room.name) private roomModel: Model<RoomDocument>,
     private memberService: MembersService,
-  ) {}
+    private logger: NestjsWinstonLoggerService,
+  ) {
+    logger.setContext(RoomsService.name);
+  }
 
   async create(
     createRoomInput: CreateRoomInput,
     userId: string,
   ): Promise<ServiceResponseType<Room | null>> {
     try {
+      this.logger.log(
+        `>>>> [create] Use with ${JSON.stringify({ createRoomInput, userId })}`,
+      );
+
       const room = await this.roomModel.create({
         name: createRoomInput.name,
         isPrivate: createRoomInput.isPrivate,
         member: Types.ObjectId(userId),
       });
-      return {
+
+      const response = {
         code: 200,
         message: '',
         value: room,
       };
+
+      this.logger.log(
+        `<<<< [findAll] Response: ${JSON.stringify({ response })}`,
+      );
+
+      return response
     } catch (error) {
+      this.logger.error(`<<<< [create] Exception`, error);
+
       return {
         code: 500,
         message: error.message,
@@ -42,6 +59,10 @@ export class RoomsService {
 
   async findAll(): Promise<ServiceResponseType<Room[]>> {
     try {
+      this.logger.log(
+        `>>>> [findAll] Use`,
+      );
+
       const rooms = await this.roomModel.find({});
       await Promise.all(
         rooms.map(async (room) => {
@@ -53,12 +74,21 @@ export class RoomsService {
             .execPopulate();
         }),
       );
-      return {
+
+      const response = {
         code: 200,
         message: '',
         value: rooms,
       };
+
+      this.logger.log(
+        `<<<< [findAll] Response: ${JSON.stringify({ response })}`,
+      );
+
+      return response
     } catch (error) {
+      this.logger.error(`<<<< [findAll] Exception`, error);
+
       return {
         code: 500,
         message: error.message,
@@ -69,15 +99,29 @@ export class RoomsService {
 
   async findOne(id: string): Promise<ServiceResponseType<Room | null>> {
     try {
+      this.logger.log(
+        `>>>> [findOne] Use with ${JSON.stringify({ id })}`,
+      );
+
       const room = await this.roomModel
         .findOne({ _id: Types.ObjectId(id) })
         .lean();
-      return {
+
+
+      const response = {
         code: 200,
         message: '',
         value: room,
       };
+
+      this.logger.log(
+        `<<<< [findAll] Response: ${JSON.stringify({ response })}`,
+      );
+
+      return response
     } catch (error) {
+      this.logger.error(`<<<< [findOne] Exception`, error);
+
       return {
         code: 500,
         message: error.message,
@@ -92,6 +136,10 @@ export class RoomsService {
     limit: number,
   ): Promise<ServiceResponseType<GetRoomMessageValue>> {
     try {
+      this.logger.log(
+        `>>>> [getRoomMessage] Use with ${JSON.stringify({ id , skip, limit})}`,
+      );
+
       const match = {
         $match: { _id: Types.ObjectId(id) },
       };
@@ -140,7 +188,7 @@ export class RoomsService {
         }),
       );
 
-      return {
+      const response = {
         code: 200,
         message: '',
         value: {
@@ -149,7 +197,15 @@ export class RoomsService {
           messages,
         },
       };
+
+      this.logger.log(
+        `<<<< [getRoomMessage] Response: ${JSON.stringify({ response })}`,
+      );
+
+      return response
     } catch (error) {
+      this.logger.error(`<<<< [getRoomMessage] Exception`, error);
+
       return {
         code: 500,
         message: error.message,
@@ -168,6 +224,10 @@ export class RoomsService {
     message: string,
   ): Promise<ServiceResponseType<Message | null>> {
     try {
+      this.logger.log(
+        `>>>> [addMessage] Use with ${JSON.stringify({ id , userId, message})}`,
+      );
+
       const messageItem: Message = {
         message,
         user: Types.ObjectId(userId),
@@ -178,12 +238,20 @@ export class RoomsService {
         { $push: { messages: messageItem }, last_message: messageItem },
       );
 
-      return {
+      const response =  {
         code: 200,
         message: '',
         value: messageItem,
       };
+
+      this.logger.log(
+        `<<<< [addMessage] Response: ${JSON.stringify({ response })}`,
+      );
+
+      return response
     } catch (error) {
+      this.logger.error(`<<<< [addMessage] Exception`, error);
+
       return {
         code: 500,
         message: error.message,
@@ -194,12 +262,26 @@ export class RoomsService {
 
   async remove(id: string): Promise<ServiceResponseType<undefined>> {
     try {
+      this.logger.log(
+        `>>>> [remove] Use with ${JSON.stringify({ id})}`,
+      );
+
       await this.roomModel.deleteOne({ _id: Types.ObjectId(id) });
-      return {
+      
+      const response = {
         code: 200,
         message: '',
       };
+
+      this.logger.log(
+        `<<<< [remove] Response: ${JSON.stringify({ response })}`,
+      );
+
+      return response
+
     } catch (error) {
+      this.logger.error(`<<<< [remove] Exception`, error);
+
       return {
         code: 500,
         message: error.message,

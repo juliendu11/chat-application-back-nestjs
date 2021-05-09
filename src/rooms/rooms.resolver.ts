@@ -1,5 +1,4 @@
 import { Resolver, Query, Mutation, Args, Subscription } from '@nestjs/graphql';
-import { Types } from 'mongoose';
 import { UseGuards } from '@nestjs/common';
 
 import { RoomsService } from './rooms.service';
@@ -20,7 +19,6 @@ import { CurrentUser } from '../decorators/graphql-current-user.decorator';
 import { MembersService } from '../members/members.service';
 import { RedisService } from '../redis/redis.service';
 import { ROOM_ADDED, ROOM_MESSAGE_ADDED } from '../redis/redis.pub-sub';
-import { ForgotPassword } from '../members/entities/sub/forgot-password.entity';
 import { Member } from '../members/entities/member.entity';
 import { Message } from './entities/sub/message.entity';
 import { GetRoomMessageOuput } from './dto/output/get-room-message.ouput';

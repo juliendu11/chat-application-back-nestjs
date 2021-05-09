@@ -7,7 +7,9 @@ import * as path from 'path';
 import { createWriteStream, ReadStream } from 'fs';
 import { mkdir } from 'fs/promises';
 import { Model, Types } from 'mongoose';
+import { NestjsWinstonLoggerService } from 'nestjs-winston-logger';
 import { ConfigService, InjectConfig } from 'nestjs-config';
+
 import { generateRandomToken } from '../helpers/random.helper';
 import { ServiceResponseType } from '../interfaces/GraphqlResponse';
 import { JWTTokenData } from '../types/JWTToken';
@@ -23,7 +25,10 @@ export class MembersService {
   constructor(
     @InjectModel(Member.name) private memberModel: Model<MemberDocument>,
     @InjectConfig() private readonly config: ConfigService,
-  ) {}
+    private logger: NestjsWinstonLoggerService,
+  ) {
+    logger.setContext(MembersService.name);
+  }
 
   private uploadPath = path.resolve(
     __dirname,
@@ -38,17 +43,28 @@ export class MembersService {
     lean = false,
   ): Promise<ServiceResponseType<Member[]>> {
     try {
+      this.logger.log(
+        `>>>> [findAll] Use with ${JSON.stringify({ selectedFields, lean })}`,
+      );
       const members = await this.memberModel
         .find({})
         .select(selectedFields.join(' '))
         .lean(lean);
 
-      return {
+      const response = {
         code: 200,
         message: '',
         value: members as Member[],
       };
+
+      this.logger.log(
+        `<<<< [findAll] Response: ${JSON.stringify({ response })}`,
+      );
+
+      return response;
     } catch (error) {
+      this.logger.error(`<<<< [findAll] Exception`, error);
+
       return {
         code: 500,
         message: error.message,
@@ -63,17 +79,32 @@ export class MembersService {
     lean = false,
   ): Promise<ServiceResponseType<Member | null>> {
     try {
+      this.logger.log(
+        `>>>> [findOne] Use with ${JSON.stringify({
+          id,
+          selectedFields,
+          lean,
+        })}`,
+      );
       const member = await this.memberModel
         .findById(Types.ObjectId(id))
         .select(selectedFields.join(' '))
         .lean(lean);
 
-      return {
+      const response = {
         code: 200,
         message: '',
         value: member as Member,
       };
+
+      this.logger.log(
+        `<<<< [findOne] Response: ${JSON.stringify({ response })}`,
+      );
+
+      return response;
     } catch (error) {
+      this.logger.error(`<<<< [findOne] Exception`, error);
+
       return {
         code: 500,
         message: error.message,
@@ -87,13 +118,30 @@ export class MembersService {
     membersUpdateProfilPicInput: MembersUpdateProfilPicInput,
   ): Promise<ServiceResponseType<undefined>> {
     try {
+      this.logger.log(
+        `>>>> [updateProfilPic] Use with ${JSON.stringify({
+          id,
+          membersUpdateProfilPicInput,
+        })}`,
+      );
+
       if (!membersUpdateProfilPicInput.filesSelected) {
         return { code: 400, message: 'No file to upload', value: null };
       }
 
       const getMember = await this.findOne(id, ['username'], true);
       if (!getResult(getMember.code) || !getMember.value) {
-        return { code: 404, message: 'Member account not found', value: null };
+        const response = {
+          code: 404,
+          message: 'Member account not found',
+          value: null,
+        };
+
+        this.logger.log(
+          `<<<< [updateProfilPic] Response: ${JSON.stringify({ response })}`,
+        );
+
+        return response;
       }
 
       const link = path.resolve(
@@ -108,8 +156,16 @@ export class MembersService {
       } = await membersUpdateProfilPicInput.filesSelected;
       const stream = createReadStream();
 
-      return await this.writeFile(stream, link);
+      const response = await this.writeFile(stream, link);
+
+      this.logger.log(
+        `<<<< [updateProfilPic] Response: ${JSON.stringify({ response })}`,
+      );
+
+      return response;
     } catch (error) {
+      this.logger.error(`<<<< [updateProfilPic] Exception`, error);
+
       return {
         code: 500,
         message: error.message,
@@ -140,12 +196,26 @@ export class MembersService {
     password,
   }: RegisterMemberInput): Promise<ServiceResponseType<Member | null>> {
     try {
+      this.logger.log(
+        `>>>> [register] Use with ${JSON.stringify({
+          username,
+          email,
+          password,
+        })}`,
+      );
+
       const exist = await this.checkExist(username, email);
       if (exist) {
-        return {
+        const response = {
           code: 400,
           message: 'An account already exists with this email or username',
         };
+
+        this.logger.log(
+          `<<<< [register] Response: ${JSON.stringify({ response })}`,
+        );
+
+        return response;
       }
 
       const member = await this.memberModel.create({
@@ -161,12 +231,20 @@ export class MembersService {
         profilPic: `uploads/pictures/${username}.jpg`,
       });
 
-      return {
+      const response = {
         code: 200,
         message: 'A confirmation email has been sent to you',
         value: member,
       };
+
+      this.logger.log(
+        `<<<< [register] Response: ${JSON.stringify({ response })}`,
+      );
+
+      return response;
     } catch (error) {
+      this.logger.error(`<<<< [register] Exception`, error);
+
       return {
         code: 500,
         message: error.message,
@@ -184,30 +262,55 @@ export class MembersService {
     password,
   }: LoginMemberInput): Promise<ServiceResponseType<LoginResult | null>> {
     try {
+      this.logger.log(
+        `>>>> [login] Use with ${JSON.stringify({
+          id,
+          password,
+        })}`,
+      );
+
       const member = await this.memberModel
         .findOne({ $or: [{ email: id }, { username: id }] })
         .lean();
       if (!member) {
-        return { code: 401, message: 'Bad information', value: null };
+        const response = { code: 401, message: 'Bad information', value: null };
+
+        this.logger.log(
+          `<<<< [login] Response: ${JSON.stringify({ response })}`,
+        );
+
+        return response;
       }
 
       if (!bcrypt.compareSync(password, member.password)) {
-        return {
+        const response = {
           message: 'Bad information, bad password',
           code: 401,
           value: null,
         };
+
+        this.logger.log(
+          `<<<< [login] Response: ${JSON.stringify({ response })}`,
+        );
+
+        return response;
       }
 
       if (!member.confirmed) {
-        return {
+        const response = {
           code: 401,
           message: 'Your account is not confirmed',
           value: null,
         };
+
+        this.logger.log(
+          `<<<< [login] Response: ${JSON.stringify({ response })}`,
+        );
+
+        return response;
       }
 
-      return {
+      const response = {
         code: 200,
         message: '',
         value: {
@@ -220,7 +323,13 @@ export class MembersService {
           refreshToken: this.createRefreshToken(),
         },
       };
+
+      this.logger.log(`<<<< [login] Response: ${JSON.stringify({ response })}`);
+
+      return response;
     } catch (error) {
+      this.logger.error(`<<<< [login] Exception`, error);
+
       return {
         code: 500,
         message: error.message,
@@ -233,9 +342,21 @@ export class MembersService {
     email: string,
   ): Promise<ServiceResponseType<Member | null>> {
     try {
+      this.logger.log(
+        `>>>> [forgotPassword] Use with ${JSON.stringify({
+          email,
+        })}`,
+      );
+
       const member = await this.memberModel.findOne({ email });
       if (!member) {
-        return { code: 401, message: 'Bad information', value: null };
+        const response = { code: 401, message: 'Bad information', value: null };
+
+        this.logger.log(
+          `<<<< [forgotPassword] Response: ${JSON.stringify({ response })}`,
+        );
+
+        return response;
       }
 
       const dateNow = dayjs();
@@ -246,11 +367,19 @@ export class MembersService {
 
       await member.save();
 
-      return {
+      const response = {
         code: 200,
         message: 'An email has been sent to you to change your password',
       };
+
+      this.logger.log(
+        `<<<< [forgotPassword] Response: ${JSON.stringify({ response })}`,
+      );
+
+      return response;
     } catch (error) {
+      this.logger.error(`<<<< [forgotPassword] Exception`, error);
+
       return {
         code: 500,
         message: error.message,
@@ -265,22 +394,42 @@ export class MembersService {
     newPassword: string,
   ): Promise<ServiceResponseType<undefined>> {
     try {
+      this.logger.log(
+        `>>>> [resetPassword] Use with ${JSON.stringify({
+          email,
+          token,
+          newPassword,
+        })}`,
+      );
+
       const member = await this.memberModel.findOne({
         email,
         'forgot_password.token': token,
       });
 
       if (!member) {
-        return { code: 401, message: 'Bad information', value: null };
+        const response = { code: 401, message: 'Bad information', value: null };
+
+        this.logger.log(
+          `<<<< [resetPassword] Response: ${JSON.stringify({ response })}`,
+        );
+
+        return response;
       }
 
       const dateNow = dayjs();
 
       if (!dateNow.isBefore(member.forgot_password.expiration_date)) {
-        return {
+        const response = {
           message: 'The token has expired',
           code: 401,
         };
+
+        this.logger.log(
+          `<<<< [resetPassword] Response: ${JSON.stringify({ response })}`,
+        );
+
+        return response;
       }
 
       member.forgot_password.token = '';
@@ -288,11 +437,19 @@ export class MembersService {
 
       await member.save();
 
-      return {
+      const response = {
         code: 200,
         message: 'Congratulations your password has been changed',
       };
+
+      this.logger.log(
+        `<<<< [resetPassword] Response: ${JSON.stringify({ response })}`,
+      );
+
+      return response;
     } catch (error) {
+      this.logger.error(`<<<< [resetPassword] Exception`, error);
+
       return {
         code: 500,
         message: error.message,
@@ -306,22 +463,41 @@ export class MembersService {
     token: string,
   ): Promise<ServiceResponseType<Member | null>> {
     try {
+      this.logger.log(
+        `>>>> [confirmAccount] Use with ${JSON.stringify({
+          email,
+          token,
+        })}`,
+      );
+
       const member = await this.memberModel.findOne({
         email,
         'registration_information.token': token,
       });
 
       if (!member) {
-        return { code: 401, message: 'Bad information', value: null };
+        const response = { code: 401, message: 'Bad information', value: null };
+
+        this.logger.log(
+          `<<<< [confirmAccount] Response: ${JSON.stringify({ response })}`,
+        );
+
+        return response;
       }
 
       const dateNow = dayjs();
 
       if (!dateNow.isBefore(member.registration_information.expiration_date)) {
-        return {
+        const response = {
           message: 'The token has expired',
           code: 401,
         };
+
+        this.logger.log(
+          `<<<< [confirmAccount] Response: ${JSON.stringify({ response })}`,
+        );
+
+        return response;
       }
 
       member.registration_information.token = '';
@@ -329,12 +505,20 @@ export class MembersService {
 
       await member.save();
 
-      return {
+      const response = {
         code: 200,
         message: 'Congratulations your account has been confirmed',
         value: member,
       };
+
+      this.logger.log(
+        `<<<< [confirmAccount] Response: ${JSON.stringify({ response })}`,
+      );
+
+      return response;
     } catch (error) {
+      this.logger.error(`<<<< [confirmAccount] Exception`, error);
+
       return {
         code: 500,
         message: error.message,
@@ -348,15 +532,31 @@ export class MembersService {
     roomId: string,
   ): Promise<ServiceResponseType<undefined>> {
     try {
+      this.logger.log(
+        `>>>> [addRoomCreated] Use with ${JSON.stringify({
+          userId,
+          roomId,
+        })}`,
+      );
+
       await this.memberModel.updateOne(
         { _id: Types.ObjectId(userId) },
         { $push: { rooms: Types.ObjectId(roomId) } },
       );
-      return {
+
+      const response = {
         code: 200,
         message: '',
       };
+
+      this.logger.log(
+        `<<<< [addRoomCreated] Response: ${JSON.stringify({ response })}`,
+      );
+
+      return response;
     } catch (error) {
+      this.logger.error(`<<<< [addRoomCreated] Exception`, error);
+
       return {
         code: 500,
         message: error.message,
@@ -369,15 +569,31 @@ export class MembersService {
     roomId: string,
   ): Promise<ServiceResponseType<undefined>> {
     try {
+      this.logger.log(
+        `>>>> [removeRoomCreated] Use with ${JSON.stringify({
+          userId,
+          roomId,
+        })}`,
+      );
+
       await this.memberModel.updateOne(
         { _id: Types.ObjectId(userId) },
         { $pull: { rooms: Types.ObjectId(roomId) } },
       );
-      return {
+
+      const response = {
         code: 200,
         message: '',
       };
+
+      this.logger.log(
+        `<<<< [removeRoomCreated] Response: ${JSON.stringify({ response })}`,
+      );
+
+      return response;
     } catch (error) {
+      this.logger.error(`<<<< [removeRoomCreated] Exception`, error);
+
       return {
         code: 500,
         message: error.message,
@@ -391,17 +607,33 @@ export class MembersService {
     lean = false,
   ): Promise<ServiceResponseType<Member | null>> {
     try {
+      this.logger.log(
+        `>>>> [getMyInfo] Use with ${JSON.stringify({
+          id,
+          selectedFields,
+          lean,
+        })}`,
+      );
+
       const member = await this.memberModel
         .findById(Types.ObjectId(id))
         .select(selectedFields.join(' '))
         .lean(lean);
 
-      return {
+      const response = {
         code: 200,
         message: '',
         value: member as Member,
       };
+
+      this.logger.log(
+        `<<<< [removeRoomCreated] Response: ${JSON.stringify({ response })}`,
+      );
+
+      return response;
     } catch (error) {
+      this.logger.error(`<<<< [getMyInfo] Exception`, error);
+
       return {
         code: 500,
         message: error.message,

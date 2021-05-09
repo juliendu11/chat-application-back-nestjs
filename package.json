@@ -20,8 +20,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "docker:dev":"./scripts/dev.sh",
-    "docker:prod":"./scripts/prod.sh"
+    "docker:dev": "./scripts/dev.sh",
+    "docker:prod": "./scripts/prod.sh"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^1.5.1",
@@ -48,6 +48,7 @@
     "md5": "^2.3.0",
     "mongoose": "^5.12.3",
     "nestjs-config": "^1.4.7",
+    "nestjs-winston-logger": "^0.2.12",
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
     "reflect-metadata": "^0.1.13",

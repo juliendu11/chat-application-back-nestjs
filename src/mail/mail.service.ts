@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from 'nestjs-config';
-
+import { NestjsWinstonLoggerService } from 'nestjs-winston-logger';
 import { resolve } from 'path';
+
 import { checkExist, readFile } from '../helpers/file.helper';
 import { replaceAll } from '../helpers/text.helper';
 
@@ -14,13 +15,19 @@ export class MailService {
   constructor(
     private readonly mailerService: MailerService,
     private readonly configService: ConfigService,
+    private logger: NestjsWinstonLoggerService,
   ) {
     this.configService = configService;
     this.from = this.configService.get('mail.from');
     this.siteUrl = this.configService.get('app.siteUrl');
+    logger.setContext(MailService.name);
   }
 
   async sendForgotPasswordMail(to: string, token: string) {
+    this.logger.log(
+      `>>>> [sendForgotPasswordMail] Use with ${JSON.stringify({to,token})}`,
+    ) ;
+
     const { text, html } = await this.getText(
       'Forgot password',
       `You have requested a change of password.\n\nClick on this link to change your password:${this.siteUrl}reset-password?email=${to}&token=${token}`,
@@ -29,6 +36,10 @@ export class MailService {
   }
 
   async sendConfirmAccountMail(to: string, token: string) {
+    this.logger.log(
+      `>>>> [sendConfirmAccountMail] Use with ${JSON.stringify({to,token})}`,
+    ) ;
+
     const { text, html } = await this.getText(
       'Confirm your account',
       `To confirm your account click on this link:${this.siteUrl}confirm?email=${to}&token=${token}`,
@@ -37,6 +48,10 @@ export class MailService {
   }
 
   async sendAccountConfirmedMail(to: string) {
+    this.logger.log(
+      `>>>> [sendAccountConfirmedMail] Use with ${JSON.stringify({to})}`,
+    ) ;
+
     const { text, html } = await this.getText(
       'Account confirmed',
       `Congratulations your account is now confirmed, you can log in`,
