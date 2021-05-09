@@ -13,7 +13,7 @@ services:
       - redis
       - mongodb
     ports:
-      - '3000:3000'
+      - '${EXPRESS_PORT}:${EXPRESS_PORT}'
     env_file:
       - .env
     environment:
