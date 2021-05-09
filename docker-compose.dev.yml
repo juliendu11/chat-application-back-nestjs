@@ -6,12 +6,8 @@ services:
       - '27017'
     ports: 
       - '27017:27017'
-    networks:
-      - chatapp
   redis:
     image: redis:alpine3.13
-    networks:
-      - chatapp
     expose: 
       - '6379'
     ports: 
@@ -24,8 +20,6 @@ services:
     depends_on:
       - redis
       - mongodb
-    networks:
-      - chatapp
     ports:
       - '3000:3000'
     env_file:
@@ -35,6 +29,3 @@ services:
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
-
-networks:
-  chatapp:
