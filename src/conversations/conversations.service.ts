@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { Member } from 'src/members/entities/member.entity';
+import { MembersService } from 'src/members/members.service';
 import { ServiceResponseType } from '../interfaces/GraphqlResponse';
 import { Message } from '../rooms/entities/sub/message.entity';
 import { ConversationSendMessageInput } from './dto/input/conversation-send-message.input';
@@ -15,6 +17,7 @@ export class ConversationsService {
   constructor(
     @InjectModel(Conversation.name)
     private conversationModel: Model<ConversationDocument>,
+    private memberService:MembersService
   ) {}
 
   async conversationMessages(
@@ -53,6 +56,16 @@ export class ConversationsService {
         },
       ]);
 
+      await Promise.all(
+        messages.map(async (message) => {
+          message.user = (await this.memberService.findOne(
+            message.user.toString(),
+            ['_id', 'username', 'email', 'profilPic'],
+            true,
+          )) as Member;
+        }),
+      );
+
       return {
         code: 200,
         message: '',
@@ -75,21 +88,29 @@ export class ConversationsService {
     }
   }
 
-  async findAllWithPopulate(memberId:string, lean = false) {
-    return await this.conversationModel
+  async findAllWithPopulate(memberId:string, lean = false):Promise<ServiceResponseType<Conversation[]>> {
+    try {
+      const conversations = await this.conversationModel
       .find({members:{$in:[Types.ObjectId(memberId)]}})
       .populate('last_message.user', 'email username _id profilPic isOnline')
       .populate('members', 'email username _id profilPic isOnline')
       .lean(lean);
+
+      return {
+        code:200,
+        message:"",
+        value:conversations as Conversation[]
+      }
+    } catch (error) {
+      return {
+        code:500,
+        message:error.message,
+        value:[]
+      }
+    }
   }
 
-  async findOneByIdWithPopulate(id: string, lean = false) {
-    return await this.conversationModel
-      .findById(Types.ObjectId(id))
-      .populate('last_message.user', 'email username _id profilPic isOnline')
-      .populate('members', 'email username _id profilPic isOnline')
-      .lean(lean);
-  }
+ 
 
   async addOrCreate(
     toMemberId: string,
@@ -108,10 +129,15 @@ export class ConversationsService {
         conversationExist = await this.create(toMemberId, memberId, message);
       }
 
+      const conversation = await this.findOneByIdWithPopulate(
+        (conversationExist as ConversationDocument)._id.toString(),
+        true,
+      );
+
       return {
         code: 200,
         message: '',
-        value: conversationExist as ConversationDocument,
+        value: conversation as ConversationDocument,
       };
     } catch (error) {
       return {
@@ -120,6 +146,14 @@ export class ConversationsService {
         value: null,
       };
     }
+  }
+
+  private async findOneByIdWithPopulate(id: string, lean = false) {
+    return await this.conversationModel
+      .findById(Types.ObjectId(id))
+      .populate('last_message.user', 'email username _id profilPic isOnline')
+      .populate('members', 'email username _id profilPic isOnline')
+      .lean(lean);
   }
 
   private async findOne(

@@ -1,12 +1,9 @@
 import { UseGuards } from '@nestjs/common';
 import { Resolver, Mutation, Args, Subscription, Query } from '@nestjs/graphql';
-import { Types } from 'mongoose';
 import { GqlAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../decorators/graphql-current-user.decorator';
 import { getResult } from '../helpers/code.helper';
 import { Member } from '../members/entities/member.entity';
-import { ForgotPassword } from '../members/entities/sub/forgot-password.entity';
-import { MembersService } from '../members/members.service';
 import { CONVERSATION_NEW_MESSAGE } from '../redis/redis.pub-sub';
 import { RedisService } from '../redis/redis.service';
 import { JWTTokenData } from '../types/JWTToken';
@@ -16,70 +13,34 @@ import { ConversationSendMessageInput } from './dto/input/conversation-send-mess
 import { GetConversationMessageOutput } from './dto/output/conversation-messages.output';
 import { ConversationNewMessageOutput } from './dto/output/conversation-new-message.output';
 import { ConversationSendMessageOutput } from './dto/output/conversation-send-message.output';
-import { ConversationsOutput } from './dto/output/conversations.output';
+import {
+  ConversationsOutput,
+  ConversationsOutputValue,
+} from './dto/output/conversations.output';
 
 @Resolver()
 export class ConversationsResolver {
   constructor(
     private readonly conversationsService: ConversationsService,
     private readonly redisService: RedisService,
-    private readonly memberService: MembersService,
-  ) {
-    // setInterval(() => {
-    //   this.test();
-    // }, 200);
-  }
-
-  test() {
-    this.redisService.conversationNewMessagePublish({
-      last_message: {
-        user: {
-          _id: Types.ObjectId(),
-          username: 'Bob',
-          email: 'bob@bobo.com',
-          password: '123',
-          registration_information: {
-            token: 'b',
-            date: new Date(),
-            expiration_date: new Date(),
-          },
-          forgot_password: new ForgotPassword(),
-          confirmed: true,
-          rooms: [],
-          profilPic: '',
-          isOnline: true,
-          conversations: [],
-        },
-        date: new Date(),
-        message: 'test',
-      },
-      _id: Types.ObjectId(),
-      members: [
-        {
-          _id: Types.ObjectId(),
-          username: 'Bob',
-          email: 'bob@bobo.com',
-          password: '123',
-          registration_information: {
-            token: 'b',
-            date: new Date(),
-            expiration_date: new Date(),
-          },
-          forgot_password: new ForgotPassword(),
-          confirmed: true,
-          rooms: [],
-          profilPic: '',
-          isOnline: true,
-          conversations: [],
-        },
-      ],
-    });
-  }
+  ) {}
 
   @Query(() => [ConversationsOutput], { name: 'conversations' })
   @UseGuards(GqlAuthGuard)
-  async findAll(@CurrentUser() user: JWTTokenData): Promise<ConversationsOutput[]> {
-    return (await this.conversationsService.findAllWithPopulate(user._id, true)) as ConversationsOutput[];
+  async findAll(
+    @CurrentUser() user: JWTTokenData,
+  ): Promise<ConversationsOutput> {
+    const {
+      code,
+      message,
+      value,
+    } = await this.conversationsService.findAllWithPopulate(user._id, true);
+
+    return {
+      result: getResult(code),
+      message,
+      value: value as ConversationsOutputValue[],
+    };
   }
 
   @Query(() => GetConversationMessageOutput)
@@ -96,16 +57,6 @@ export class ConversationsResolver {
       getConversationMessageInput.id,
       getConversationMessageInput.skip,
       getConversationMessageInput.limit,
-    );
-
-    await Promise.all(
-      value.messages.map(async (message) => {
-        message.user = (await this.memberService.findOne(
-          message.user.toString(),
-          ['_id', 'username', 'email', 'profilPic'],
-          true,
-        )) as Member;
-      }),
     );
 
     return {
@@ -133,15 +84,10 @@ export class ConversationsResolver {
 
     const result = getResult(code);
     if (result) {
-      const conversation = await this.conversationsService.findOneByIdWithPopulate(
-        value._id.toString(),
-        true,
-      );
-
       this.redisService.conversationNewMessagePublish({
-        last_message: conversation.last_message,
-        _id: conversation._id,
-        members: conversation.members as Member[],
+        last_message: value.last_message,
+        _id: value._id,
+        members: value.members as Member[],
       });
     }
 

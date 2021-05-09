@@ -47,6 +47,12 @@ type ConversationSendMessageOutput {
 }
 
 type ConversationsOutput {
+  message: String!
+  result: Boolean!
+  value: [ConversationsOutputValue!]!
+}
+
+type ConversationsOutputValue {
   _id: String!
   last_message: Message
   members: [Member!]!
