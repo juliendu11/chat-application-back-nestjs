@@ -1,13 +1,13 @@
-version: '3'
+version: '3.7'
 services:
   mongodb:
-    image: mongo
+    image: mongo:4.4.5
     expose:
       - '27017'
     networks:
       - chatapp
   redis:
-    image: redis
+    image: redis:alpine3.13
     networks:
       - chatapp
   api:
