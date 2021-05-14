@@ -24,6 +24,7 @@ import { Message } from './entities/sub/message.entity';
 import { RoomGetMessageOuput } from './dto/output/room-get-message.output';
 import { RoomGetMessageInput } from './dto/input/room-get-message.input';
 import { RoomGetsOutput } from './dto/output/room-gets.output';
+import { RoomGetInput } from './dto/input/room-get.input';
 @Resolver(() => Room)
 export class RoomsResolver {
   constructor(
@@ -74,8 +75,8 @@ export class RoomsResolver {
 
   @Query(() => RoomGetOutput, { name: 'room' })
   @UseGuards(GqlAuthGuard)
-  async findOne(@Args('id') id: string): Promise<RoomGetOutput> {
-    const { code, message, value } = await this.roomsService.findOne(id);
+  async findOne(@Args('roomGetInput') roomGetInput: RoomGetInput): Promise<RoomGetOutput> {
+    const { code, message, value } = await this.roomsService.findOne(roomGetInput.id);
     return {
       result: getResult(code),
       message,

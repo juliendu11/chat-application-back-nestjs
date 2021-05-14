@@ -181,7 +181,7 @@ type Query {
   memberMyInformation: MemberMyInformationOutput!
   membersInfo: MembersInfoOutput!
   membersOnline: MemberOnlineOutput!
-  room(id: String!): RoomGetOutput!
+  room(roomGetInput: RoomGetInput!): RoomGetOutput!
   roomMessage(roomGetMessageInput: RoomGetMessageInput!): RoomGetMessageOuput!
   rooms: RoomGetsOutput!
   sayHello: String!
@@ -222,6 +222,10 @@ type RoomCreateOutput {
   message: String!
   result: Boolean!
   value: Room
+}
+
+input RoomGetInput {
+  id: String!
 }
 
 input RoomGetMessageInput {
