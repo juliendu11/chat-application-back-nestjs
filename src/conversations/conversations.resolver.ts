@@ -8,7 +8,7 @@ import { CONVERSATION_NEW_MESSAGE } from '../redis/redis.pub-sub';
 import { RedisService } from '../redis/redis.service';
 import { JWTTokenData } from '../types/JWTToken';
 import { ConversationsService } from './conversations.service';
-import { GetConversationMessageInput } from './dto/input/conversation-messages.input';
+import { ConversationMessageInput } from './dto/input/conversation-messages.input';
 import { ConversationSendMessageInput } from './dto/input/conversation-send-message.input';
 import { GetConversationMessageOutput } from './dto/output/conversation-messages.output';
 import { ConversationNewMessageOutput } from './dto/output/conversation-new-message.output';
@@ -46,17 +46,17 @@ export class ConversationsResolver {
   @Query(() => GetConversationMessageOutput)
   @UseGuards(GqlAuthGuard)
   async conversationMessages(
-    @Args('getConversationMessageInput')
-    getConversationMessageInput: GetConversationMessageInput,
+    @Args('conversationMessageInput')
+    conversationMessageInput: ConversationMessageInput,
   ): Promise<GetConversationMessageOutput> {
     const {
       code,
       message,
       value,
     } = await this.conversationsService.conversationMessages(
-      getConversationMessageInput.id,
-      getConversationMessageInput.skip,
-      getConversationMessageInput.limit,
+      conversationMessageInput.id,
+      conversationMessageInput.skip,
+      conversationMessageInput.limit,
     );
 
     return {

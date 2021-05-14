@@ -1,7 +1,7 @@
 import { InputType, Field } from '@nestjs/graphql';
 
 @InputType()
-export class GetRoomMessageInput {
+export class RoomGetMessageInput {
   @Field(() => Number)
   skip: number;
 

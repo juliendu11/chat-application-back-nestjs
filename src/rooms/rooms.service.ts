@@ -5,8 +5,8 @@ import { NestjsWinstonLoggerService } from 'nestjs-winston-logger';
 import { getResult } from 'src/helpers/code.helper';
 import { MembersService } from 'src/members/members.service';
 import { ServiceResponseType } from '../interfaces/GraphqlResponse';
-import { CreateRoomInput } from './dto/input/create-room.input';
-import { GetRoomMessageValue } from './dto/output/get-room-message.ouput';
+import { RoomCreateInput } from './dto/input/room-create.input';
+import { GetRoomMessageValue } from './dto/output/room-get-message.output';
 import { Room, RoomDocument } from './entities/room.entity';
 import { Message } from './entities/sub/message.entity';
 
@@ -21,7 +21,7 @@ export class RoomsService {
   }
 
   async create(
-    createRoomInput: CreateRoomInput,
+    createRoomInput: RoomCreateInput,
     userId: string,
   ): Promise<ServiceResponseType<Room | null>> {
     try {

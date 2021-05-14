@@ -1,13 +1,13 @@
 import { InputType, Field } from '@nestjs/graphql';
 
 @InputType()
-export class RegisterMemberInput {
-  @Field(() => String)
-  username: string;
-
+export class MemberResetPasswordInput {
   @Field(() => String)
   email: string;
 
   @Field(() => String)
-  password: string;
+  token: string;
+
+  @Field(() => String)
+  newPassword: string;
 }

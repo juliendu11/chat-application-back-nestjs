@@ -14,8 +14,8 @@ import { generateRandomToken } from '../helpers/random.helper';
 import { ServiceResponseType } from '../interfaces/GraphqlResponse';
 import { JWTTokenData } from '../types/JWTToken';
 import { LoginResult } from '../types/LoginResult';
-import { LoginMemberInput } from './dto/input/login-member.input';
-import { RegisterMemberInput } from './dto/input/register-member.input';
+import { MemberLoginInput } from './dto/input/member-login.input';
+import { MemberRegisterInput } from './dto/input/member-register.input';
 import { Member, MemberDocument } from './entities/member.entity';
 import { MembersUpdateProfilPicInput } from './dto/input/members-update-profil-pic-input';
 import { getResult } from 'src/helpers/code.helper';
@@ -194,7 +194,7 @@ export class MembersService {
     username,
     email,
     password,
-  }: RegisterMemberInput): Promise<ServiceResponseType<Member | null>> {
+  }: MemberRegisterInput): Promise<ServiceResponseType<Member | null>> {
     try {
       this.logger.log(
         `>>>> [register] Use with ${JSON.stringify({
@@ -260,7 +260,7 @@ export class MembersService {
   async login({
     id,
     password,
-  }: LoginMemberInput): Promise<ServiceResponseType<LoginResult | null>> {
+  }: MemberLoginInput): Promise<ServiceResponseType<LoginResult | null>> {
     try {
       this.logger.log(
         `>>>> [login] Use with ${JSON.stringify({

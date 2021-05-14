@@ -2,25 +2,9 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-input AddRoomMessageInput {
-  id: String!
-  message: String!
-}
-
-type AddRoomMessageOuput {
-  message: String!
-  result: Boolean!
-  value: Message
-}
-
 type CommonOutput {
   message: String!
   result: Boolean!
-}
-
-input ConfirmMemberInput {
-  email: String!
-  token: String!
 }
 
 type Conversation {
@@ -28,6 +12,12 @@ type Conversation {
   last_message: Message
   members: [Member!]!
   messages: [Message!]!
+}
+
+input ConversationMessageInput {
+  id: String!
+  limit: Float!
+  skip: Float!
 }
 
 type ConversationNewMessageOutput {
@@ -58,17 +48,6 @@ type ConversationsOutputValue {
   members: [Member!]!
 }
 
-input CreateRoomInput {
-  isPrivate: Boolean!
-  name: String!
-}
-
-type CreateRoomOutput {
-  message: String!
-  result: Boolean!
-  value: Room
-}
-
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
@@ -78,16 +57,6 @@ type ForgotPassword {
   date: String
   expiration_date: String
   token: String!
-}
-
-input ForgotPasswordInput {
-  email: String!
-}
-
-input GetConversationMessageInput {
-  id: String!
-  limit: Float!
-  skip: Float!
 }
 
 type GetConversationMessageOutput {
@@ -102,45 +71,10 @@ type GetConversationMessageValue {
   pageAvailable: Float!
 }
 
-input GetRoomMessageInput {
-  id: String!
-  limit: Float!
-  skip: Float!
-}
-
-type GetRoomMessageOuput {
-  message: String!
-  result: Boolean!
-  value: GetRoomMessageValue!
-}
-
 type GetRoomMessageValue {
   messages: [Message!]!
   moreAvailable: Boolean!
   pageAvailable: Float!
-}
-
-type GetRoomOuput {
-  message: String!
-  result: Boolean!
-  value: Room!
-}
-
-type GetRoomsOuput {
-  message: String!
-  result: Boolean!
-  value: [Room!]!
-}
-
-input LoginMemberInput {
-  id: String!
-  password: String!
-}
-
-type LoginMemberOutput {
-  message: String!
-  result: Boolean!
-  token: String!
 }
 
 type Member {
@@ -157,6 +91,32 @@ type Member {
   username: String!
 }
 
+input MemberConfirmMemberInput {
+  email: String!
+  token: String!
+}
+
+input MemberForgotPasswordInput {
+  email: String!
+}
+
+input MemberLoginInput {
+  id: String!
+  password: String!
+}
+
+type MemberLoginOutput {
+  message: String!
+  result: Boolean!
+  token: String!
+}
+
+type MemberMyInformationOutput {
+  message: String!
+  result: Boolean!
+  value: Member!
+}
+
 type MemberOnlineOutput {
   message: String!
   result: Boolean!
@@ -168,6 +128,23 @@ type MemberOnlineOutputUser {
   email: String!
   profilPic: String!
   username: String!
+}
+
+input MemberRegisterInput {
+  email: String!
+  password: String!
+  username: String!
+}
+
+type MemberRegisterOutput {
+  message: String!
+  result: Boolean!
+}
+
+input MemberResetPasswordInput {
+  email: String!
+  newPassword: String!
+  token: String!
 }
 
 type MembersInfoOutput {
@@ -187,50 +164,32 @@ type Message {
 }
 
 type Mutation {
-  addRoomMessage(addRoomMessageInput: AddRoomMessageInput!): AddRoomMessageOuput!
-  confirmAccount(confirmAccountInput: ConfirmMemberInput!): CommonOutput!
   conversationSendMessage(conversationSendMessageInput: ConversationSendMessageInput!): ConversationSendMessageOutput!
-  createRoom(createRoomInput: CreateRoomInput!): CreateRoomOutput!
-  forgotPassword(forgotPasswordInput: ForgotPasswordInput!): CommonOutput!
-  login(loginMemberInput: LoginMemberInput!): LoginMemberOutput!
+  memberConfirmAccount(memberConfirmAccountInput: MemberConfirmMemberInput!): CommonOutput!
+  memberForgotPassword(memberForgotPasswordInput: MemberForgotPasswordInput!): CommonOutput!
+  memberLogin(memberLoginInput: MemberLoginInput!): MemberLoginOutput!
+  memberRegister(memberRegisterMemberInput: MemberRegisterInput!): MemberRegisterOutput!
+  memberResetPassword(memberResetPasswordInput: MemberResetPasswordInput!): CommonOutput!
   membersUpdateProfilPic(membersUpdateProfilPicInput: MembersUpdateProfilPicInput!): CommonOutput!
-  register(registerMemberInput: RegisterMemberInput!): RegisterMemberOutput!
-  removeRoom(id: String!): CommonOutput!
-  resetPassword(resetPasswordInput: ResetPasswordInput!): CommonOutput!
+  roomAddMessage(roomAddMessageInput: RoomAddMessageInput!): RoomAddMessageOutput!
+  roomCreate(roomCreateInput: RoomCreateInput!): RoomCreateOutput!
 }
 
 type Query {
-  conversationMessages(getConversationMessageInput: GetConversationMessageInput!): GetConversationMessageOutput!
+  conversationMessages(conversationMessageInput: ConversationMessageInput!): GetConversationMessageOutput!
   conversations: [ConversationsOutput!]!
+  memberMyInformation: MemberMyInformationOutput!
   membersInfo: MembersInfoOutput!
   membersOnline: MemberOnlineOutput!
-  myInformation: Member!
-  room(id: String!): GetRoomOuput!
-  roomMessage(getRoomMessageInput: GetRoomMessageInput!): GetRoomMessageOuput!
-  rooms: GetRoomsOuput!
+  room(id: String!): RoomGetOutput!
+  roomMessage(roomGetMessageInput: RoomGetMessageInput!): RoomGetMessageOuput!
+  rooms: RoomGetsOutput!
   sayHello: String!
-}
-
-input RegisterMemberInput {
-  email: String!
-  password: String!
-  username: String!
-}
-
-type RegisterMemberOutput {
-  message: String!
-  result: Boolean!
 }
 
 type RegistrationInformation {
   date: String
   expiration_date: String
-  token: String!
-}
-
-input ResetPasswordInput {
-  email: String!
-  newPassword: String!
   token: String!
 }
 
@@ -241,6 +200,52 @@ type Room {
   member: Member!
   messages: [Message!]!
   name: String!
+}
+
+input RoomAddMessageInput {
+  id: String!
+  message: String!
+}
+
+type RoomAddMessageOutput {
+  message: String!
+  result: Boolean!
+  value: Message
+}
+
+input RoomCreateInput {
+  isPrivate: Boolean!
+  name: String!
+}
+
+type RoomCreateOutput {
+  message: String!
+  result: Boolean!
+  value: Room
+}
+
+input RoomGetMessageInput {
+  id: String!
+  limit: Float!
+  skip: Float!
+}
+
+type RoomGetMessageOuput {
+  message: String!
+  result: Boolean!
+  value: GetRoomMessageValue!
+}
+
+type RoomGetOutput {
+  message: String!
+  result: Boolean!
+  value: Room!
+}
+
+type RoomGetsOutput {
+  message: String!
+  result: Boolean!
+  value: [Room!]!
 }
 
 type RoomMessageAddedOuput {

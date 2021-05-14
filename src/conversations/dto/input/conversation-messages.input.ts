@@ -1,7 +1,7 @@
 import { InputType, Field } from '@nestjs/graphql';
 
 @InputType()
-export class GetConversationMessageInput {
+export class ConversationMessageInput {
   @Field(() => Number)
   skip: number;
 

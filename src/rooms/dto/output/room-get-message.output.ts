@@ -16,7 +16,7 @@ export class GetRoomMessageValue {
 }
 
 @ObjectType()
-export class GetRoomMessageOuput implements GraphqlQLResponseType {
+export class RoomGetMessageOuput implements GraphqlQLResponseType {
   @Field(() => Boolean)
   result: boolean;
 

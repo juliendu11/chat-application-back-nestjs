@@ -4,11 +4,11 @@ import { UseGuards } from '@nestjs/common';
 import { RoomsService } from './rooms.service';
 import { Room } from './entities/room.entity';
 
-import { CreateRoomInput } from './dto/input/create-room.input';
-import { CreateRoomOutput } from './dto/output/create-room.output';
-import { GetRoomOuput } from './dto/output/get-room.output';
-import { AddRoomMessageInput } from './dto/input/add-room-message.input';
-import { AddRoomMessageOuput } from './dto/output/add-room-message.output';
+import { RoomCreateInput } from './dto/input/room-create.input';
+import { RoomCreateOutput } from './dto/output/room-create.output';
+import { RoomGetOutput } from './dto/output/room-get.output';
+import { RoomAddMessageInput } from './dto/input/room-add-message.input';
+import { RoomAddMessageOutput } from './dto/output/room-add-message.output';
 import { RoomMessageAddedOuput } from './dto/output/room-message-added.ouput';
 
 import { getResult } from '../helpers/code.helper';
@@ -21,9 +21,9 @@ import { RedisService } from '../redis/redis.service';
 import { ROOM_ADDED, ROOM_MESSAGE_ADDED } from '../redis/redis.pub-sub';
 import { Member } from '../members/entities/member.entity';
 import { Message } from './entities/sub/message.entity';
-import { GetRoomMessageOuput } from './dto/output/get-room-message.ouput';
-import { GetRoomMessageInput } from './dto/input/get-room-message.input';
-import { GetRoomsOuput } from './dto/output/get-rooms.output';
+import { RoomGetMessageOuput } from './dto/output/room-get-message.output';
+import { RoomGetMessageInput } from './dto/input/room-get-message.input';
+import { RoomGetsOutput } from './dto/output/room-gets.output';
 @Resolver(() => Room)
 export class RoomsResolver {
   constructor(
@@ -32,14 +32,14 @@ export class RoomsResolver {
     private readonly redisService: RedisService,
   ) {}
 
-  @Mutation(() => CreateRoomOutput)
+  @Mutation(() => RoomCreateOutput)
   @UseGuards(GqlAuthGuard)
-  async createRoom(
-    @Args('createRoomInput') createRoomInput: CreateRoomInput,
+  async roomCreate(
+    @Args('roomCreateInput') roomCreateInput: RoomCreateInput,
     @CurrentUser() user: JWTTokenData,
-  ): Promise<CreateRoomOutput> {
+  ): Promise<RoomCreateOutput> {
     const { code, message, value } = await this.roomsService.create(
-      createRoomInput,
+      roomCreateInput,
       user._id,
     );
 
@@ -60,9 +60,9 @@ export class RoomsResolver {
     this.redisService.roomAddedPublish(value);
   }
 
-  @Query(() => GetRoomsOuput, { name: 'rooms' })
+  @Query(() => RoomGetsOutput, { name: 'rooms' })
   @UseGuards(GqlAuthGuard)
-  async findAll(): Promise<GetRoomsOuput> {
+  async findAll(): Promise<RoomGetsOutput> {
     const {code, message, value} = await this.roomsService.findAll();
 
     return {
@@ -72,9 +72,9 @@ export class RoomsResolver {
     }
   }
 
-  @Query(() => GetRoomOuput, { name: 'room' })
+  @Query(() => RoomGetOutput, { name: 'room' })
   @UseGuards(GqlAuthGuard)
-  async findOne(@Args('id') id: string): Promise<GetRoomOuput> {
+  async findOne(@Args('id') id: string): Promise<RoomGetOutput> {
     const { code, message, value } = await this.roomsService.findOne(id);
     return {
       result: getResult(code),
@@ -83,15 +83,15 @@ export class RoomsResolver {
     };
   }
 
-  @Query(() => GetRoomMessageOuput)
+  @Query(() => RoomGetMessageOuput)
   @UseGuards(GqlAuthGuard)
   async roomMessage(
-    @Args('getRoomMessageInput') getRoomMessageInput: GetRoomMessageInput,
-  ): Promise<GetRoomMessageOuput> {
+    @Args('roomGetMessageInput') roomGetMessageInput: RoomGetMessageInput,
+  ): Promise<RoomGetMessageOuput> {
     const { code, message, value } = await this.roomsService.getRoomMessage(
-      getRoomMessageInput.id,
-      getRoomMessageInput.skip,
-      getRoomMessageInput.limit,
+      roomGetMessageInput.id,
+      roomGetMessageInput.skip,
+      roomGetMessageInput.limit,
     );
 
     return {
@@ -101,21 +101,21 @@ export class RoomsResolver {
     };
   }
 
-  @Mutation(() => AddRoomMessageOuput)
+  @Mutation(() => RoomAddMessageOutput)
   @UseGuards(GqlAuthGuard)
-  async addRoomMessage(
-    @Args('addRoomMessageInput') addRoomMessageInput: AddRoomMessageInput,
+  async roomAddMessage(
+    @Args('roomAddMessageInput') roomAddMessageInput: RoomAddMessageInput,
     @CurrentUser() user: JWTTokenData,
-  ): Promise<AddRoomMessageOuput> {
+  ): Promise<RoomAddMessageOutput> {
     const { code, message, value } = await this.roomsService.addMessage(
-      addRoomMessageInput.id,
+      roomAddMessageInput.id,
       user._id,
-      addRoomMessageInput.message,
+      roomAddMessageInput.message,
     );
 
     const result = getResult(code);
     if (result) {
-      await this.publishRoomMessageAdded(value, addRoomMessageInput);
+      await this.publishRoomMessageAdded(value, roomAddMessageInput.id);
     }
 
     return {
@@ -127,7 +127,7 @@ export class RoomsResolver {
 
   private async publishRoomMessageAdded(
     value: Message,
-    addRoomMessageInput: AddRoomMessageInput,
+    id:string,
   ) {
     const member = await this.memberService.findOne(
       value.user.toString(),
@@ -139,26 +139,7 @@ export class RoomsResolver {
     }
 
     value.user = member.value as Member;
-    this.redisService.roomMessageAddedPublish(value, addRoomMessageInput.id);
-  }
-
-  @Mutation(() => CommonOutput)
-  @UseGuards(GqlAuthGuard)
-  async removeRoom(
-    @Args('id') id: string,
-    @CurrentUser() user: JWTTokenData,
-  ): Promise<CommonOutput> {
-    const { code, message } = await this.roomsService.remove(id);
-
-    const result = getResult(code);
-    if (result) {
-      this.memberService.removeRoomCreated(user._id, id);
-    }
-
-    return {
-      result,
-      message,
-    };
+    this.redisService.roomMessageAddedPublish(value, id);
   }
 
   @Subscription(() => Room, {

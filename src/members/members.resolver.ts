@@ -11,16 +11,16 @@ import { Response } from 'express';
 import { fieldsList } from 'graphql-fields-list';
 import { MembersService } from './members.service';
 import { Member } from './entities/member.entity';
-import { RegisterMemberInput } from './dto/input/register-member.input';
-import { RegisterMemberOutput } from './dto/ouput/register-member-ouput';
+import { MemberRegisterInput } from './dto/input/member-register.input';
+import { MemberRegisterOutput } from './dto/ouput/member-register-ouput';
 import { getResult } from '../helpers/code.helper';
-import { LoginMemberInput } from './dto/input/login-member.input';
-import { LoginMemberOutput } from './dto/ouput/logjn-member-ouput';
+import { MemberLoginInput } from './dto/input/member-login.input';
+import { MemberLoginOutput } from './dto/ouput/member-login.output';
 import { ConfigService } from 'nestjs-config';
-import { ForgotPasswordInput } from './dto/input/forgot-password.input';
+import { MemberForgotPasswordInput } from './dto/input/member-forgot-password.input';
 import { CommonOutput } from '../common/CommonOutput';
-import { ConfirmMemberInput } from './dto/input/confirm-member-input';
-import { ResetPasswordInput } from './dto/input/reset-password-input';
+import { MemberConfirmMemberInput } from './dto/input/member-confirm.input';
+import { MemberResetPasswordInput } from './dto/input/member-reset-password-input';
 import { MailService } from '../mail/mail.service';
 import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -33,6 +33,7 @@ import { MembersUpdateProfilPicInput } from './dto/input/members-update-profil-p
 import { MEMBER_OFFLINE, MEMBER_ONLINE } from 'src/redis/redis.pub-sub';
 import { RoomMessageAddedOuput } from 'src/rooms/dto/output/room-message-added.ouput';
 import { LoginResult } from 'src/types/LoginResult';
+import { MemberMyInformationOutput } from './dto/ouput/member-my-information.output';
 
 @Resolver(() => Member)
 export class MembersResolver {
@@ -43,12 +44,12 @@ export class MembersResolver {
     private readonly redisService: RedisService,
   ) {}
 
-  @Mutation(() => RegisterMemberOutput)
-  async register(
-    @Args('registerMemberInput') registerMemberInput: RegisterMemberInput,
-  ): Promise<RegisterMemberOutput> {
+  @Mutation(() => MemberRegisterOutput)
+  async memberRegister(
+    @Args('memberRegisterMemberInput') memberRegisterMemberInput: MemberRegisterInput,
+  ): Promise<MemberRegisterOutput> {
     const { code, message, value } = await this.membersService.register(
-      registerMemberInput,
+      memberRegisterMemberInput,
     );
 
     this.mailService.sendConfirmAccountMail(
@@ -63,11 +64,11 @@ export class MembersResolver {
   }
 
   @Mutation(() => CommonOutput)
-  async forgotPassword(
-    @Args('forgotPasswordInput') forgotPasswordInput: ForgotPasswordInput,
-  ): Promise<RegisterMemberOutput> {
+  async memberForgotPassword(
+    @Args('memberForgotPasswordInput') memberForgotPasswordInput: MemberForgotPasswordInput,
+  ): Promise<CommonOutput> {
     const { code, message, value } = await this.membersService.forgotPassword(
-      forgotPasswordInput.email,
+      memberForgotPasswordInput.email,
     );
 
     this.mailService.sendForgotPasswordMail(
@@ -82,13 +83,13 @@ export class MembersResolver {
   }
 
   @Mutation(() => CommonOutput)
-  async resetPassword(
-    @Args('resetPasswordInput') resetPasswordInput: ResetPasswordInput,
-  ): Promise<RegisterMemberOutput> {
+  async memberResetPassword(
+    @Args('memberResetPasswordInput') memberResetPasswordInput: MemberResetPasswordInput,
+  ): Promise<CommonOutput> {
     const { code, message } = await this.membersService.resetPassword(
-      resetPasswordInput.email,
-      resetPasswordInput.token,
-      resetPasswordInput.newPassword,
+      memberResetPasswordInput.email,
+      memberResetPasswordInput.token,
+      memberResetPasswordInput.newPassword,
     );
     return {
       result: getResult(code),
@@ -97,12 +98,12 @@ export class MembersResolver {
   }
 
   @Mutation(() => CommonOutput)
-  async confirmAccount(
-    @Args('confirmAccountInput') confirmAccountInput: ConfirmMemberInput,
-  ): Promise<RegisterMemberOutput> {
+  async memberConfirmAccount(
+    @Args('memberConfirmAccountInput') memberConfirmAccountInput: MemberConfirmMemberInput,
+  ): Promise<CommonOutput> {
     const { code, message, value } = await this.membersService.confirmAccount(
-      confirmAccountInput.email,
-      confirmAccountInput.token,
+      memberConfirmAccountInput.email,
+      memberConfirmAccountInput.token,
     );
 
     this.mailService.sendAccountConfirmedMail(value.email);
@@ -113,13 +114,13 @@ export class MembersResolver {
     };
   }
 
-  @Mutation(() => LoginMemberOutput)
-  async login(
-    @Args('loginMemberInput') loginMemberInput: LoginMemberInput,
+  @Mutation(() => MemberLoginOutput)
+  async memberLogin(
+    @Args('memberLoginInput') memberLoginInput: MemberLoginInput,
     @Context() ctx,
-  ): Promise<LoginMemberOutput> {
+  ): Promise<MemberLoginOutput> {
     const { code, message, value } = await this.membersService.login(
-      loginMemberInput,
+      memberLoginInput,
     );
 
     const result = getResult(code);
@@ -165,14 +166,20 @@ export class MembersResolver {
     };
   }
 
-  @Query(() => Member)
+  @Query(() => MemberMyInformationOutput)
   @UseGuards(GqlAuthGuard)
-  async myInformation(@CurrentUser() user: JWTTokenData, @Info() info) {
-    return await this.membersService.getMyInfo(
+  async memberMyInformation(@CurrentUser() user: JWTTokenData, @Info() info):Promise<MemberMyInformationOutput> {
+    const {code, message, value} = await this.membersService.getMyInfo(
       user._id,
       fieldsList(info),
       true,
     );
+
+    return {
+      result:getResult(code),
+      message,
+      value
+    }
   }
 
   @Query(() => MemberOnlineOutput)

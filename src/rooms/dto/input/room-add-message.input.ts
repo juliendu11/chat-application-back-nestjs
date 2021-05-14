@@ -1,13 +1,10 @@
 import { InputType, Field } from '@nestjs/graphql';
 
 @InputType()
-export class ResetPasswordInput {
+export class RoomAddMessageInput {
   @Field(() => String)
-  email: string;
+  id: string;
 
   @Field(() => String)
-  token: string;
-
-  @Field(() => String)
-  newPassword: string;
+  message: string;
 }

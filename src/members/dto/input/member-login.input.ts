@@ -1,10 +1,10 @@
 import { InputType, Field } from '@nestjs/graphql';
 
 @InputType()
-export class AddRoomMessageInput {
+export class MemberLoginInput {
   @Field(() => String)
   id: string;
 
   @Field(() => String)
-  message: string;
+  password: string;
 }
