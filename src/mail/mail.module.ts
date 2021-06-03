@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { NestjsWinstonLoggerModule } from 'nestjs-winston-logger';
 import { format, transports } from 'winston';
-import DailyRotateFile from 'winston-daily-rotate-file';
+import * as DailyRotateFile from 'winston-daily-rotate-file';
 
 import { MailService } from './mail.service';
 

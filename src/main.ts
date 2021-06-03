@@ -14,7 +14,7 @@ import {
 } from 'nestjs-winston-logger';
 
 import { format, transports } from 'winston';
-import DailyRotateFile from 'winston-daily-rotate-file';
+import * as DailyRotateFile from 'winston-daily-rotate-file';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

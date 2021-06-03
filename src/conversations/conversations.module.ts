@@ -9,7 +9,7 @@ import {
   Conversation,
   ConversationSchema,
 } from './entities/conversation.entity';
-import DailyRotateFile from 'winston-daily-rotate-file';
+import * as DailyRotateFile from 'winston-daily-rotate-file';
 
 @Module({
   imports: [

@@ -7,7 +7,7 @@ import { RoomsService } from './rooms.service';
 import { RoomsResolver } from './rooms.resolver';
 import { Room, RoomSchema } from './entities/room.entity';
 import { MembersModule } from '../members/members.module';
-import DailyRotateFile from 'winston-daily-rotate-file';
+import * as DailyRotateFile from 'winston-daily-rotate-file';
 
 @Module({
   imports: [

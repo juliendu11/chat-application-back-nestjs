@@ -7,7 +7,7 @@ import { Member, MemberSchema } from './entities/member.entity';
 import { MailModule } from '../mail/mail.module';
 import { MembersService } from './members.service';
 import { MembersResolver } from './members.resolver';
-import DailyRotateFile from 'winston-daily-rotate-file';
+import * as DailyRotateFile from 'winston-daily-rotate-file';
 @Global()
 @Module({
   imports: [
