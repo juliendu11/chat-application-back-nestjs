@@ -14,6 +14,7 @@ import {
 } from 'nestjs-winston-logger';
 
 import { format, transports } from 'winston';
+import DailyRotateFile from 'winston-daily-rotate-file';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -29,14 +30,20 @@ async function bootstrap() {
 
   const globalLogger = new NestjsWinstonLoggerService({
     format: format.combine(
-      format.timestamp({ format: 'isoDateTime' }),
+      format.timestamp({ format: "isoDateTime" }),
       format.json(),
       format.colorize({ all: true }),
     ),
     transports: [
-      new transports.File({ filename: 'logs/error.log', level: 'error' }),
-      new transports.File({ filename: 'logs/combined.log' }),
       new transports.Console(),
+      new DailyRotateFile({
+        filename: "%DATE%.log",
+        datePattern: "DD-MM-YYYY",
+        zippedArchive: true,
+        maxSize: "20m",
+        maxFiles: "14d",
+        dirname: "logs",
+      })
     ],
   });
   app.useLogger(globalLogger);

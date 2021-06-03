@@ -2,9 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { NestjsWinstonLoggerService } from 'nestjs-winston-logger';
-import { getResult } from 'src/helpers/code.helper';
-import { Member } from 'src/members/entities/member.entity';
-import { MembersService } from 'src/members/members.service';
+import {stringify} from 'flatted';
+
+import { getResult } from '../helpers/code.helper';
+import { MembersService } from '../members/members.service';
 import { ServiceResponseType } from '../interfaces/GraphqlResponse';
 import { Message } from '../rooms/entities/sub/message.entity';
 import { ConversationSendMessageInput } from './dto/input/conversation-send-message.input';
@@ -13,6 +14,7 @@ import {
   Conversation,
   ConversationDocument,
 } from './entities/conversation.entity';
+import { ConversationsOutputValue } from './dto/output/conversations.output';
 
 @Injectable()
 export class ConversationsService {
@@ -32,7 +34,7 @@ export class ConversationsService {
   ): Promise<ServiceResponseType<GetConversationMessageValue>> {
     try {
       this.logger.log(
-        `>>>> [conversationMessages] Use with ${JSON.stringify({
+        `>>>> [conversationMessages] Use with ${stringify({
           id,
           skip,
           limit,
@@ -98,7 +100,7 @@ export class ConversationsService {
       };
 
       this.logger.log(
-        `<<<< [conversationMessages] Response: ${JSON.stringify({ response })}`,
+        `<<<< [conversationMessages] Response: ${stringify({ response })}`,
       );
 
       return response;
@@ -120,10 +122,10 @@ export class ConversationsService {
   async findAllWithPopulate(
     memberId: string,
     lean = false,
-  ): Promise<ServiceResponseType<Conversation[]>> {
+  ): Promise<ServiceResponseType<ConversationsOutputValue[]>> {
     try {
       this.logger.log(
-        `>>>> [findAllWithPopulate] Use with ${JSON.stringify({
+        `>>>> [findAllWithPopulate] Use with ${stringify({
           memberId,
           lean,
         })}`,
@@ -133,16 +135,18 @@ export class ConversationsService {
         .find({ members: { $in: [Types.ObjectId(memberId)] } })
         .populate('last_message.user', 'email username _id profilPic isOnline')
         .populate('members', 'email username _id profilPic isOnline')
+        .select('-messages')
         .lean(lean);
+
 
       const response = {
         code: 200,
         message: '',
-        value: conversations as Conversation[],
+        value: conversations as ConversationsOutputValue[],
       };
 
       this.logger.log(
-        `<<<< [findAllWithPopulate] Response: ${JSON.stringify({ response })}`,
+        `<<<< [findAllWithPopulate] Response: ${stringify({ response })}`,
       );
 
       return response;
@@ -163,7 +167,7 @@ export class ConversationsService {
   ): Promise<ServiceResponseType<Conversation | null>> {
     try {
       this.logger.log(
-        `>>>> [addOrCreate] Use with ${JSON.stringify({
+        `>>>> [addOrCreate] Use with ${stringify({
           toMemberId,
           memberId,
           message,
@@ -194,7 +198,7 @@ export class ConversationsService {
       };
 
       this.logger.log(
-        `<<<< [addOrCreate] Response: ${JSON.stringify({ response })}`,
+        `<<<< [addOrCreate] Response: ${stringify({ response })}`,
       );
 
       return response;

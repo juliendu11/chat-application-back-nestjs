@@ -171,7 +171,7 @@ export class MembersResolver {
   async memberMyInformation(@CurrentUser() user: JWTTokenData, @Info() info):Promise<MemberMyInformationOutput> {
     const {code, message, value} = await this.membersService.getMyInfo(
       user._id,
-      fieldsList(info),
+      fieldsList(info, {path:"value"}),
       true,
     );
 

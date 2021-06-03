@@ -3,6 +3,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from 'nestjs-config';
 import { NestjsWinstonLoggerService } from 'nestjs-winston-logger';
 import { resolve } from 'path';
+import {stringify} from 'flatted';
 
 import { checkExist, readFile } from '../helpers/file.helper';
 import { replaceAll } from '../helpers/text.helper';
@@ -25,7 +26,7 @@ export class MailService {
 
   async sendForgotPasswordMail(to: string, token: string) {
     this.logger.log(
-      `>>>> [sendForgotPasswordMail] Use with ${JSON.stringify({to,token})}`,
+      `>>>> [sendForgotPasswordMail] Use with ${stringify({to,token})}`,
     ) ;
 
     const { text, html } = await this.getText(
@@ -37,7 +38,7 @@ export class MailService {
 
   async sendConfirmAccountMail(to: string, token: string) {
     this.logger.log(
-      `>>>> [sendConfirmAccountMail] Use with ${JSON.stringify({to,token})}`,
+      `>>>> [sendConfirmAccountMail] Use with ${stringify({to,token})}`,
     ) ;
 
     const { text, html } = await this.getText(
@@ -49,7 +50,7 @@ export class MailService {
 
   async sendAccountConfirmedMail(to: string) {
     this.logger.log(
-      `>>>> [sendAccountConfirmedMail] Use with ${JSON.stringify({to})}`,
+      `>>>> [sendAccountConfirmedMail] Use with ${stringify({to})}`,
     ) ;
 
     const { text, html } = await this.getText(

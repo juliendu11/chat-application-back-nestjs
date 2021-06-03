@@ -39,7 +39,7 @@ export class ConversationsResolver {
     return {
       result: getResult(code),
       message,
-      value: value as ConversationsOutputValue[],
+      value: value,
     };
   }
 

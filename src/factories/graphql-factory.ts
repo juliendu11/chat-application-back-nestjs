@@ -24,7 +24,7 @@ export class GraphqlQLFactory implements GqlOptionsFactory {
       autoSchemaFile: path.join(process.cwd(), 'src/schema.gql'),
       sortSchema: true,
       playground: true,
-      debug: false,
+      debug: process.env.NODE_ENV === "development",
       cors: {
         origin: this.config.get('cors.allowedOrigin'),
         credentials: true,

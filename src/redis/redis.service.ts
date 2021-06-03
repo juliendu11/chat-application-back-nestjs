@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import * as Redis from 'ioredis';
+import {stringify} from 'flatted';
 import { ConfigService, InjectConfig } from 'nestjs-config';
 import { Redis as RedisType } from 'ioredis';
 
@@ -51,7 +52,7 @@ export class RedisService {
   }
 
   setUserConnected(username: string, userInfo: JWTTokenData) {
-    this.redis.set(this.getOnlineKeyName(username), JSON.stringify(userInfo));
+    this.redis.set(this.getOnlineKeyName(username), stringify(userInfo));
   }
 
   removeUserConnected(username: string) {
