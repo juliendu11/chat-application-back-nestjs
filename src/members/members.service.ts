@@ -9,7 +9,6 @@ import { mkdir } from 'fs/promises';
 import { Model, Types } from 'mongoose';
 import { NestjsWinstonLoggerService } from 'nestjs-winston-logger';
 import { ConfigService, InjectConfig } from 'nestjs-config';
-import {stringify} from 'flatted';
 import { generateRandomToken } from '../helpers/random.helper';
 import { ServiceResponseType } from '../interfaces/GraphqlResponse';
 import { JWTTokenData } from '../types/JWTToken';
@@ -44,7 +43,7 @@ export class MembersService {
   ): Promise<ServiceResponseType<Member[]>> {
     try {
       this.logger.log(
-        `>>>> [findAll] Use with ${stringify({ selectedFields, lean })}`,
+        `>>>> [findAll] Use with ${JSON.stringify({ selectedFields, lean })}`,
       );
       const members = await this.memberModel
         .find({})
@@ -58,7 +57,7 @@ export class MembersService {
       };
 
       this.logger.log(
-        `<<<< [findAll] Response: ${stringify({ response })}`,
+        `<<<< [findAll] Response: ${JSON.stringify({ response })}`,
       );
 
       return response;
@@ -80,7 +79,7 @@ export class MembersService {
   ): Promise<ServiceResponseType<Member | null>> {
     try {
       this.logger.log(
-        `>>>> [findOne] Use with ${stringify({
+        `>>>> [findOne] Use with ${JSON.stringify({
           id,
           selectedFields,
           lean,
@@ -97,10 +96,8 @@ export class MembersService {
         value: member as Member,
       };
 
-      console.log(stringify({ response }))
-
       this.logger.log(
-        `<<<< [findOne] Response: ${stringify({ response })}`,
+        `<<<< [findOne] Response: ${JSON.stringify({ response })}`,
       );
 
       return response;
@@ -121,7 +118,7 @@ export class MembersService {
   ): Promise<ServiceResponseType<undefined>> {
     try {
       this.logger.log(
-        `>>>> [updateProfilPic] Use with ${stringify({
+        `>>>> [updateProfilPic] Use with ${JSON.stringify({
           id,
           membersUpdateProfilPicInput,
         })}`,
@@ -140,7 +137,7 @@ export class MembersService {
         };
 
         this.logger.log(
-          `<<<< [updateProfilPic] Response: ${stringify({ response })}`,
+          `<<<< [updateProfilPic] Response: ${JSON.stringify({ response })}`,
         );
 
         return response;
@@ -161,7 +158,7 @@ export class MembersService {
       const response = await this.writeFile(stream, link);
 
       this.logger.log(
-        `<<<< [updateProfilPic] Response: ${stringify({ response })}`,
+        `<<<< [updateProfilPic] Response: ${JSON.stringify({ response })}`,
       );
 
       return response;
@@ -199,7 +196,7 @@ export class MembersService {
   }: MemberRegisterInput): Promise<ServiceResponseType<Member | null>> {
     try {
       this.logger.log(
-        `>>>> [register] Use with ${stringify({
+        `>>>> [register] Use with ${JSON.stringify({
           username,
           email,
           password,
@@ -214,7 +211,7 @@ export class MembersService {
         };
 
         this.logger.log(
-          `<<<< [register] Response: ${stringify({ response })}`,
+          `<<<< [register] Response: ${JSON.stringify({ response })}`,
         );
 
         return response;
@@ -240,7 +237,7 @@ export class MembersService {
       };
 
       this.logger.log(
-        `<<<< [register] Response: ${stringify({ response })}`,
+        `<<<< [register] Response: ${JSON.stringify({ response })}`,
       );
 
       return response;
@@ -265,7 +262,7 @@ export class MembersService {
   }: MemberLoginInput): Promise<ServiceResponseType<LoginResult | null>> {
     try {
       this.logger.log(
-        `>>>> [login] Use with ${stringify({
+        `>>>> [login] Use with ${JSON.stringify({
           id,
           password,
         })}`,
@@ -278,7 +275,7 @@ export class MembersService {
         const response = { code: 401, message: 'Bad information', value: null };
 
         this.logger.log(
-          `<<<< [login] Response: ${stringify({ response })}`,
+          `<<<< [login] Response: ${JSON.stringify({ response })}`,
         );
 
         return response;
@@ -292,7 +289,7 @@ export class MembersService {
         };
 
         this.logger.log(
-          `<<<< [login] Response: ${stringify({ response })}`,
+          `<<<< [login] Response: ${JSON.stringify({ response })}`,
         );
 
         return response;
@@ -306,7 +303,7 @@ export class MembersService {
         };
 
         this.logger.log(
-          `<<<< [login] Response: ${stringify({ response })}`,
+          `<<<< [login] Response: ${JSON.stringify({ response })}`,
         );
 
         return response;
@@ -326,7 +323,7 @@ export class MembersService {
         },
       };
 
-      this.logger.log(`<<<< [login] Response: ${stringify({ response })}`);
+      this.logger.log(`<<<< [login] Response: ${JSON.stringify({ response })}`);
 
       return response;
     } catch (error) {
@@ -345,7 +342,7 @@ export class MembersService {
   ): Promise<ServiceResponseType<Member | null>> {
     try {
       this.logger.log(
-        `>>>> [forgotPassword] Use with ${stringify({
+        `>>>> [forgotPassword] Use with ${JSON.stringify({
           email,
         })}`,
       );
@@ -355,7 +352,7 @@ export class MembersService {
         const response = { code: 401, message: 'Bad information', value: null };
 
         this.logger.log(
-          `<<<< [forgotPassword] Response: ${stringify({ response })}`,
+          `<<<< [forgotPassword] Response: ${JSON.stringify({ response })}`,
         );
 
         return response;
@@ -375,7 +372,7 @@ export class MembersService {
       };
 
       this.logger.log(
-        `<<<< [forgotPassword] Response: ${stringify({ response })}`,
+        `<<<< [forgotPassword] Response: ${JSON.stringify({ response })}`,
       );
 
       return response;
@@ -397,7 +394,7 @@ export class MembersService {
   ): Promise<ServiceResponseType<undefined>> {
     try {
       this.logger.log(
-        `>>>> [resetPassword] Use with ${stringify({
+        `>>>> [resetPassword] Use with ${JSON.stringify({
           email,
           token,
           newPassword,
@@ -413,7 +410,7 @@ export class MembersService {
         const response = { code: 401, message: 'Bad information', value: null };
 
         this.logger.log(
-          `<<<< [resetPassword] Response: ${stringify({ response })}`,
+          `<<<< [resetPassword] Response: ${JSON.stringify({ response })}`,
         );
 
         return response;
@@ -428,7 +425,7 @@ export class MembersService {
         };
 
         this.logger.log(
-          `<<<< [resetPassword] Response: ${stringify({ response })}`,
+          `<<<< [resetPassword] Response: ${JSON.stringify({ response })}`,
         );
 
         return response;
@@ -445,7 +442,7 @@ export class MembersService {
       };
 
       this.logger.log(
-        `<<<< [resetPassword] Response: ${stringify({ response })}`,
+        `<<<< [resetPassword] Response: ${JSON.stringify({ response })}`,
       );
 
       return response;
@@ -466,7 +463,7 @@ export class MembersService {
   ): Promise<ServiceResponseType<Member | null>> {
     try {
       this.logger.log(
-        `>>>> [confirmAccount] Use with ${stringify({
+        `>>>> [confirmAccount] Use with ${JSON.stringify({
           email,
           token,
         })}`,
@@ -481,7 +478,7 @@ export class MembersService {
         const response = { code: 401, message: 'Bad information', value: null };
 
         this.logger.log(
-          `<<<< [confirmAccount] Response: ${stringify({ response })}`,
+          `<<<< [confirmAccount] Response: ${JSON.stringify({ response })}`,
         );
 
         return response;
@@ -496,7 +493,7 @@ export class MembersService {
         };
 
         this.logger.log(
-          `<<<< [confirmAccount] Response: ${stringify({ response })}`,
+          `<<<< [confirmAccount] Response: ${JSON.stringify({ response })}`,
         );
 
         return response;
@@ -514,7 +511,7 @@ export class MembersService {
       };
 
       this.logger.log(
-        `<<<< [confirmAccount] Response: ${stringify({ response })}`,
+        `<<<< [confirmAccount] Response: ${JSON.stringify({ response })}`,
       );
 
       return response;
@@ -535,7 +532,7 @@ export class MembersService {
   ): Promise<ServiceResponseType<undefined>> {
     try {
       this.logger.log(
-        `>>>> [addRoomCreated] Use with ${stringify({
+        `>>>> [addRoomCreated] Use with ${JSON.stringify({
           userId,
           roomId,
         })}`,
@@ -552,7 +549,7 @@ export class MembersService {
       };
 
       this.logger.log(
-        `<<<< [addRoomCreated] Response: ${stringify({ response })}`,
+        `<<<< [addRoomCreated] Response: ${JSON.stringify({ response })}`,
       );
 
       return response;
@@ -572,7 +569,7 @@ export class MembersService {
   ): Promise<ServiceResponseType<undefined>> {
     try {
       this.logger.log(
-        `>>>> [removeRoomCreated] Use with ${stringify({
+        `>>>> [removeRoomCreated] Use with ${JSON.stringify({
           userId,
           roomId,
         })}`,
@@ -589,7 +586,7 @@ export class MembersService {
       };
 
       this.logger.log(
-        `<<<< [removeRoomCreated] Response: ${stringify({ response })}`,
+        `<<<< [removeRoomCreated] Response: ${JSON.stringify({ response })}`,
       );
 
       return response;
@@ -610,7 +607,7 @@ export class MembersService {
   ): Promise<ServiceResponseType<Member | null>> {
     try {
       this.logger.log(
-        `>>>> [getMyInfo] Use with ${stringify({
+        `>>>> [getMyInfo] Use with ${JSON.stringify({
           id,
           selectedFields,
           lean,
@@ -629,7 +626,7 @@ export class MembersService {
       };
 
       this.logger.log(
-        `<<<< [getMyInfo] Response: ${stringify({ response })}`,
+        `<<<< [getMyInfo] Response: ${JSON.stringify({ response })}`,
       );
 
       return response;

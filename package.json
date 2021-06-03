@@ -37,7 +37,6 @@
     "bcrypt": "^5.0.1",
     "cookie-parser": "^1.4.5",
     "dayjs": "^1.10.4",
-    "flatted": "^3.1.1",
     "graphql": "^15.5.0",
     "graphql-fields-list": "^2.2.3",
     "graphql-redis-subscriptions": "^2.3.1",

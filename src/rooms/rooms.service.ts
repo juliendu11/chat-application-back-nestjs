@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import {stringify} from 'flatted';
 import { NestjsWinstonLoggerService } from 'nestjs-winston-logger';
 import { getResult } from 'src/helpers/code.helper';
 import { MembersService } from 'src/members/members.service';
@@ -27,7 +26,7 @@ export class RoomsService {
   ): Promise<ServiceResponseType<Room | null>> {
     try {
       this.logger.log(
-        `>>>> [create] Use with ${stringify({ createRoomInput, userId })}`,
+        `>>>> [create] Use with ${JSON.stringify({ createRoomInput, userId })}`,
       );
 
       const room = await this.roomModel.create({
@@ -43,7 +42,7 @@ export class RoomsService {
       };
 
       this.logger.log(
-        `<<<< [findAll] Response: ${stringify({ response })}`,
+        `<<<< [findAll] Response: ${JSON.stringify({ response })}`,
       );
 
       return response
@@ -83,7 +82,7 @@ export class RoomsService {
       };
 
       this.logger.log(
-        `<<<< [findAll] Response: ${stringify({ response })}`,
+        `<<<< [findAll] Response: ${JSON.stringify({ response })}`,
       );
 
       return response
@@ -101,7 +100,7 @@ export class RoomsService {
   async findOne(id: string): Promise<ServiceResponseType<Room | null>> {
     try {
       this.logger.log(
-        `>>>> [findOne] Use with ${stringify({ id })}`,
+        `>>>> [findOne] Use with ${JSON.stringify({ id })}`,
       );
 
       const room = await this.roomModel
@@ -116,7 +115,7 @@ export class RoomsService {
       };
 
       this.logger.log(
-        `<<<< [findAll] Response: ${stringify({ response })}`,
+        `<<<< [findAll] Response: ${JSON.stringify({ response })}`,
       );
 
       return response
@@ -138,7 +137,7 @@ export class RoomsService {
   ): Promise<ServiceResponseType<GetRoomMessageValue>> {
     try {
       this.logger.log(
-        `>>>> [getRoomMessage] Use with ${stringify({ id , skip, limit})}`,
+        `>>>> [getRoomMessage] Use with ${JSON.stringify({ id , skip, limit})}`,
       );
 
       const match = {
@@ -200,7 +199,7 @@ export class RoomsService {
       };
 
       this.logger.log(
-        `<<<< [getRoomMessage] Response: ${stringify({ response })}`,
+        `<<<< [getRoomMessage] Response: ${JSON.stringify({ response })}`,
       );
 
       return response
@@ -226,7 +225,7 @@ export class RoomsService {
   ): Promise<ServiceResponseType<Message | null>> {
     try {
       this.logger.log(
-        `>>>> [addMessage] Use with ${stringify({ id , userId, message})}`,
+        `>>>> [addMessage] Use with ${JSON.stringify({ id , userId, message})}`,
       );
 
       const messageItem: Message = {
@@ -246,7 +245,7 @@ export class RoomsService {
       };
 
       this.logger.log(
-        `<<<< [addMessage] Response: ${stringify({ response })}`,
+        `<<<< [addMessage] Response: ${JSON.stringify({ response })}`,
       );
 
       return response
@@ -264,7 +263,7 @@ export class RoomsService {
   async remove(id: string): Promise<ServiceResponseType<undefined>> {
     try {
       this.logger.log(
-        `>>>> [remove] Use with ${stringify({ id})}`,
+        `>>>> [remove] Use with ${JSON.stringify({ id})}`,
       );
 
       await this.roomModel.deleteOne({ _id: Types.ObjectId(id) });
@@ -275,7 +274,7 @@ export class RoomsService {
       };
 
       this.logger.log(
-        `<<<< [remove] Response: ${stringify({ response })}`,
+        `<<<< [remove] Response: ${JSON.stringify({ response })}`,
       );
 
       return response

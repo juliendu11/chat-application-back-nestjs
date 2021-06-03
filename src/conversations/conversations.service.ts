@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { NestjsWinstonLoggerService } from 'nestjs-winston-logger';
-import {stringify} from 'flatted';
 
 import { getResult } from '../helpers/code.helper';
 import { MembersService } from '../members/members.service';
@@ -34,7 +33,7 @@ export class ConversationsService {
   ): Promise<ServiceResponseType<GetConversationMessageValue>> {
     try {
       this.logger.log(
-        `>>>> [conversationMessages] Use with ${stringify({
+        `>>>> [conversationMessages] Use with ${JSON.stringify({
           id,
           skip,
           limit,
@@ -100,7 +99,7 @@ export class ConversationsService {
       };
 
       this.logger.log(
-        `<<<< [conversationMessages] Response: ${stringify({ response })}`,
+        `<<<< [conversationMessages] Response: ${JSON.stringify({ response })}`,
       );
 
       return response;
@@ -125,7 +124,7 @@ export class ConversationsService {
   ): Promise<ServiceResponseType<ConversationsOutputValue[]>> {
     try {
       this.logger.log(
-        `>>>> [findAllWithPopulate] Use with ${stringify({
+        `>>>> [findAllWithPopulate] Use with ${JSON.stringify({
           memberId,
           lean,
         })}`,
@@ -146,7 +145,7 @@ export class ConversationsService {
       };
 
       this.logger.log(
-        `<<<< [findAllWithPopulate] Response: ${stringify({ response })}`,
+        `<<<< [findAllWithPopulate] Response: ${JSON.stringify({ response })}`,
       );
 
       return response;
@@ -167,7 +166,7 @@ export class ConversationsService {
   ): Promise<ServiceResponseType<Conversation | null>> {
     try {
       this.logger.log(
-        `>>>> [addOrCreate] Use with ${stringify({
+        `>>>> [addOrCreate] Use with ${JSON.stringify({
           toMemberId,
           memberId,
           message,
@@ -198,7 +197,7 @@ export class ConversationsService {
       };
 
       this.logger.log(
-        `<<<< [addOrCreate] Response: ${stringify({ response })}`,
+        `<<<< [addOrCreate] Response: ${JSON.stringify({ response })}`,
       );
 
       return response;

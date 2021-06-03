@@ -177,7 +177,7 @@ type Mutation {
 
 type Query {
   conversationMessages(conversationMessageInput: ConversationMessageInput!): GetConversationMessageOutput!
-  conversations: [ConversationsOutput!]!
+  conversations: ConversationsOutput!
   memberMyInformation: MemberMyInformationOutput!
   membersInfo: MembersInfoOutput!
   membersOnline: MemberOnlineOutput!

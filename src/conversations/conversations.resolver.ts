@@ -15,7 +15,6 @@ import { ConversationNewMessageOutput } from './dto/output/conversation-new-mess
 import { ConversationSendMessageOutput } from './dto/output/conversation-send-message.output';
 import {
   ConversationsOutput,
-  ConversationsOutputValue,
 } from './dto/output/conversations.output';
 
 @Resolver()
@@ -25,7 +24,7 @@ export class ConversationsResolver {
     private readonly redisService: RedisService,
   ) {}
 
-  @Query(() => [ConversationsOutput], { name: 'conversations' })
+  @Query(() => ConversationsOutput, { name: 'conversations' })
   @UseGuards(GqlAuthGuard)
   async findAll(
     @CurrentUser() user: JWTTokenData,
