@@ -98,6 +98,8 @@ export class ConversationsService {
         },
       };
 
+      console.log(JSON.stringify(response))
+
       this.logger.log(
         `<<<< [conversationMessages] Response: ${JSON.stringify({ response })}`,
       );

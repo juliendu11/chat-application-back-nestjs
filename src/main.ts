@@ -78,6 +78,8 @@ class InterceptorTest implements NestInterceptor {
     this.logger.setContext(context.getClass().name);
     const ctx = context.switchToHttp();
 
+    let isSubscription = false
+
     if (context.getType() === 'http') {
       // do something that is only important in the context of regular HTTP requests (REST)
       // const ctx = context.switchToHttp();
@@ -89,6 +91,8 @@ class InterceptorTest implements NestInterceptor {
       const gqlContext = GqlExecutionContext.create(context);
       const args = gqlContext.getArgs();
 
+      isSubscription = gqlContext.getInfo().parentType.toString() === "Subscription"
+
       this.logger.log(
         `${JSON.stringify({
           headers: ctx.getRequest<Request>()?.headers,
@@ -98,33 +102,16 @@ class InterceptorTest implements NestInterceptor {
       );
     }
 
-    var replaceCircular = function (val, cache = null) {
-      cache = cache || new WeakSet();
-
-      if (val && typeof val == 'object') {
-        if (cache.has(val)) return '[Circular]';
-
-        cache.add(val);
-
-        var obj = Array.isArray(val) ? [] : {};
-        for (var idx in val) {
-          obj[idx] = replaceCircular(val[idx], cache);
-        }
-
-        cache.delete(val);
-        return obj;
-      }
-
-      return val;
-    };
-
     // const now = Date.now();
     return next.handle().pipe(
       tap({
         next: (value) => {
-          this.logger.log(
-            `${JSON.stringify(replaceCircular({ Response: value }))}`,
-          );
+          if (!isSubscription) {
+            this.logger.log(
+              `${JSON.stringify({ Response: value })}`,
+            );
+          }
+          isSubscription =false
         },
         /*
        /**
