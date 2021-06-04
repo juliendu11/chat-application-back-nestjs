@@ -130,6 +130,12 @@ type MemberOnlineOutputUser {
   username: String!
 }
 
+type MemberRefreshTokenOutput {
+  message: String!
+  newToken: String
+  result: Boolean!
+}
+
 input MemberRegisterInput {
   email: String!
   password: String!
@@ -179,6 +185,7 @@ type Query {
   conversationMessages(conversationMessageInput: ConversationMessageInput!): GetConversationMessageOutput!
   conversations: ConversationsOutput!
   memberMyInformation: MemberMyInformationOutput!
+  memberRefreshToken: MemberRefreshTokenOutput!
   membersInfo: MembersInfoOutput!
   membersOnline: MemberOnlineOutput!
   room(roomGetInput: RoomGetInput!): RoomGetOutput!

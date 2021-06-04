@@ -11,13 +11,15 @@ import { NestjsWinstonLoggerService } from 'nestjs-winston-logger';
 import { ConfigService, InjectConfig } from 'nestjs-config';
 import { generateRandomToken } from '../helpers/random.helper';
 import { ServiceResponseType } from '../interfaces/GraphqlResponse';
-import { JWTTokenData } from '../types/JWTToken';
+import { JWTToken, JWTTokenData } from '../types/JWTToken';
 import { LoginResult } from '../types/LoginResult';
 import { MemberLoginInput } from './dto/input/member-login.input';
 import { MemberRegisterInput } from './dto/input/member-register.input';
 import { Member, MemberDocument } from './entities/member.entity';
 import { MembersUpdateProfilPicInput } from './dto/input/members-update-profil-pic-input';
 import { getResult } from 'src/helpers/code.helper';
+import { RedisService } from 'src/redis/redis.service';
+import { RefreshTokenResult } from 'src/types/RefreshTokenResult';
 
 @Injectable()
 export class MembersService {
@@ -25,6 +27,7 @@ export class MembersService {
     @InjectModel(Member.name) private memberModel: Model<MemberDocument>,
     @InjectConfig() private readonly config: ConfigService,
     private logger: NestjsWinstonLoggerService,
+    private readonly redisService:RedisService
   ) {
     logger.setContext(MembersService.name);
   }
@@ -320,6 +323,7 @@ export class MembersService {
             member.profilPic,
           ),
           refreshToken: this.createRefreshToken(),
+          member:member as Member
         },
       };
 
@@ -646,6 +650,97 @@ export class MembersService {
       { _id: Types.ObjectId(id) },
       { isOnline: value },
     );
+  }
+
+  public async generateNewTokenFromRefreshToken(
+    oldToken:string,
+    refreshToken: string)
+    : Promise<ServiceResponseType<RefreshTokenResult | null>> {
+    try {
+      throw new Error("Test");
+      this.logger.log(
+        `>>>> [generateNewTokenFromRefreshToken] Use with ${JSON.stringify({
+          refreshToken
+        })}`,
+      );
+
+      refreshToken = refreshToken.replace('Bearer ', '');
+      oldToken = oldToken.replace('Bearer ', '');
+
+      const checkIfTokenIsGood = jwt.decode(oldToken);
+      if (!checkIfTokenIsGood) {
+        const response = { code: 403, message: 'Token is invalid', value: null};
+
+        this.logger.log(
+          `<<<< [generateNewTokenFromRefreshToken] Response: ${JSON.stringify(response)}`,
+        );
+
+        return response;
+      }
+
+      const findMemberSessionInStore = await this.redisService.getUserSession(
+        (checkIfTokenIsGood as JWTToken).data.username,
+      );
+      if (!getResult(findMemberSessionInStore.code) || !findMemberSessionInStore.value) {
+        const response = { code: 403, message: findMemberSessionInStore.message, value:null };
+
+        this.logger.log(
+          `<<<< [generateNewTokenFromRefreshToken] Response: ${JSON.stringify(response)}`,
+        );
+
+        return response;
+      }
+
+      if (refreshToken !== findMemberSessionInStore.value.refreshToken) {
+        const response = { code: 400, message: "Bad refresh token", value:null };
+
+        this.logger.log(
+          `<<<< [generateNewTokenFromRefreshToken] Response: ${JSON.stringify(response)}`,
+        );
+
+        return response;
+      }
+
+      if (oldToken !== findMemberSessionInStore.value.jwtToken) {
+        const response = { code: 400, message: "Bad token", value:null };
+
+        this.logger.log(
+          `<<<< [generateNewTokenFromRefreshToken] Response: ${JSON.stringify(response)}`,
+        );
+
+        return response;
+      }
+
+      const newToken = this.createJWTToken(
+        findMemberSessionInStore.value._id,
+        findMemberSessionInStore.value.email,
+        findMemberSessionInStore.value.username,
+        findMemberSessionInStore.value.profilPic,
+      )
+
+      const response = {
+        code: 200,
+        message: "",
+        value: {
+          newToken,
+          username:findMemberSessionInStore.value.username
+        }
+      }
+
+      this.logger.log(
+        `<<<< [generateNewTokenFromRefreshToken] Response: ${JSON.stringify(response)}`,
+      );
+
+      return response
+    } catch (error) {
+      this.logger.error(`<<<< [generateNewTokenFromRefreshToken] Exception`, error);
+
+      return {
+        code: 500,
+        message:error.message,
+        value:null
+      }
+    }
   }
 
   private createJWTToken(

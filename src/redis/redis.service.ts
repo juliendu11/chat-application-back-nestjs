@@ -21,8 +21,11 @@ import { ConversationNewMessageOutput } from '../conversations/dto/output/conver
 import { MemberOnlineOutputUser } from 'src/members/dto/ouput/member-online.ouput';
 import { MemberOnlinePublish } from './publish-dto/member-online.publish';
 import { MemberOfflinePublish } from './publish-dto/member-offline.publish';
+import { RedisSessionData } from 'src/types/RedisSessionData';
+import { ServiceResponseType } from 'src/interfaces/GraphqlResponse';
 
 const ONLINE_KEY = 'ONLINE';
+const SESSION_KEY = 'SESSION';
 
 @Injectable()
 export class RedisService {
@@ -82,6 +85,56 @@ export class RedisService {
     );
 
     return users;
+  }
+
+  private getSessionKeyName(username: string) {
+    return `${SESSION_KEY}:${username}`;
+  }
+
+  async getUserSession(username: string):Promise<ServiceResponseType<RedisSessionData|null>>{
+    try {
+      console.log(this.getSessionKeyName(username))
+      const session = await this.redis.get(this.getSessionKeyName(username))
+      if (!session) {
+        return {
+          code: 404,
+          message:"No session exist",
+          value:null
+        }
+      }
+
+      const parsed: RedisSessionData = JSON.parse(session)
+      
+      return {
+        code: 200,
+        message: "",
+        value: parsed
+      }
+
+    } catch (error) {
+      return {
+        code: 500,
+        message: error.message,
+        value:null
+      }
+    }
+  }
+
+  setUserSession(username: string, session: RedisSessionData) {
+    this.redis.set(this.getSessionKeyName(username), JSON.stringify(session));
+  }
+
+  async updateTokenInUserSession(username: string, newToken: string) {
+    const value = await this.redis.get(this.getSessionKeyName(username))
+    const session: RedisSessionData = JSON.parse(value)
+    
+    session.jwtToken = newToken;
+
+    this.setUserSession(username, session);
+  }
+
+  removeUserSession(username: string) {
+    this.redis.del(this.getSessionKeyName(username));
   }
 
   roomAddedListener() {

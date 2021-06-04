@@ -7,7 +7,7 @@ import {
   Query,
   Subscription,
 } from '@nestjs/graphql';
-import { Response } from 'express';
+import { Request,Response } from 'express';
 import { fieldsList } from 'graphql-fields-list';
 import { MembersService } from './members.service';
 import { Member } from './entities/member.entity';
@@ -34,6 +34,7 @@ import { MEMBER_OFFLINE, MEMBER_ONLINE } from 'src/redis/redis.pub-sub';
 import { RoomMessageAddedOuput } from 'src/rooms/dto/output/room-message-added.ouput';
 import { LoginResult } from 'src/types/LoginResult';
 import { MemberMyInformationOutput } from './dto/ouput/member-my-information.output';
+import { MemberRefreshTokenOutput } from './dto/ouput/member-refresh-token.output';
 
 @Resolver(() => Member)
 export class MembersResolver {
@@ -126,6 +127,15 @@ export class MembersResolver {
     const result = getResult(code);
     if (result) {
       this.generateRefreshTokenCookie(ctx, value);
+
+      this.redisService.setUserSession(value.member.username, {
+        email: value.member.email,
+        username: value.member.username,
+        _id: value.member._id.toString(),
+        jwtToken: value.token,
+        refreshToken:value.refreshToken,
+        profilPic:value.member.profilPic,
+      })
     }
 
     return {
@@ -164,6 +174,46 @@ export class MembersResolver {
       result: getResult(code),
       message,
     };
+  }
+
+  @Query(() => MemberRefreshTokenOutput)
+  async memberRefreshToken(
+    @Context() ctx
+  ): Promise<MemberRefreshTokenOutput> {
+    const refreshToken = (<Request>ctx.req).cookies[
+      this.configService.get('token.refreshTokenName')
+    ];
+
+    if (!refreshToken) {
+      return {
+        result: false,
+        message: "Unable to find refresh token",
+        newToken:null
+      }
+    }
+
+    const token = (<Request>ctx.req).headers.authorization;
+
+    if (!token) {
+      return {
+        result: false,
+        message: "Unable to find token",
+        newToken:null
+      }
+    }
+
+    const { code, message, value } = await this.membersService.generateNewTokenFromRefreshToken(token, refreshToken);
+    
+    const result = getResult(code)
+    if (result && value) {
+      this.redisService.updateTokenInUserSession(value.username, value.newToken)
+    }
+
+    return {
+      result,
+      message,
+      newToken:value ? value.newToken :""
+    }
   }
 
   @Query(() => MemberMyInformationOutput)

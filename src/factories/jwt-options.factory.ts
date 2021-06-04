@@ -10,7 +10,7 @@ export class JwtFactory implements JwtOptionsFactory {
   createJwtOptions(): JwtModuleOptions | Promise<JwtModuleOptions> {
     return {
       secret: this.config.get('jsonwebtoken.key'),
-      signOptions: { expiresIn: '60s' },
+      signOptions: { expiresIn: `${this.config.get('jsonwebtoken.time')}h` },
     };
   }
 }
