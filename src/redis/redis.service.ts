@@ -40,9 +40,21 @@ export class RedisService {
     };
     this.redis = new Redis(redisConfig);
 
+    const dateReviver = (key, value) => {
+      const isISO8601Z = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)Z$/;
+      if (typeof value === 'string' && isISO8601Z.test(value)) {
+        const tempDateNumber = Date.parse(value);
+        if (!isNaN(tempDateNumber)) {
+          return new Date(tempDateNumber);
+        }
+      }
+      return value;
+    };
+
     this.redisPubSub = new RedisPubSub({
       publisher: new Redis(redisConfig),
       subscriber: new Redis(redisConfig),
+      reviver:dateReviver
     });
   }
 
@@ -103,7 +115,13 @@ export class RedisService {
     conversationNewMessageOutput: ConversationNewMessageOutput,
   ) {
     this.redisPubSub.publish(CONVERSATION_NEW_MESSAGE, {
-      conversationNewMessage: conversationNewMessageOutput,
+      conversationNewMessage: {
+        ...conversationNewMessageOutput,
+        last_message: {
+          ...conversationNewMessageOutput.last_message,
+          date: new Date(conversationNewMessageOutput.last_message.date)
+        }
+      },
     } as ConversationNewMessagePublish);
   }
 
