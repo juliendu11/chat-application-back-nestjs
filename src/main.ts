@@ -19,6 +19,7 @@ import * as DailyRotateFile from 'winston-daily-rotate-file';
 import { CallHandler, ExecutionContext, NestInterceptor } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
+import safeStringify from 'fast-safe-stringify';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -78,8 +79,6 @@ class InterceptorTest implements NestInterceptor {
     this.logger.setContext(context.getClass().name);
     const ctx = context.switchToHttp();
 
-    let isSubscription = false
-
     if (context.getType() === 'http') {
       // do something that is only important in the context of regular HTTP requests (REST)
       // const ctx = context.switchToHttp();
@@ -90,8 +89,6 @@ class InterceptorTest implements NestInterceptor {
     } else if (context.getType<GqlContextType>() === 'graphql') {
       const gqlContext = GqlExecutionContext.create(context);
       const args = gqlContext.getArgs();
-
-      isSubscription = gqlContext.getInfo().parentType.toString() === "Subscription"
 
       this.logger.log(
         `${JSON.stringify({
@@ -106,12 +103,7 @@ class InterceptorTest implements NestInterceptor {
     return next.handle().pipe(
       tap({
         next: (value) => {
-          if (!isSubscription) {
-            this.logger.log(
-              `${JSON.stringify({ Response: value })}`,
-            );
-          }
-          isSubscription =false
+          this.logger.log(`${safeStringify({ Response: value })}`);
         },
         /*
        /**
