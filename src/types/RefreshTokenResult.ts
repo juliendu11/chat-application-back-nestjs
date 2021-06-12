@@ -1,4 +1,4 @@
 export type RefreshTokenResult = {
-    newToken: string
-    username:string
-}
+  newToken: string;
+  username: string;
+};

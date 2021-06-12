@@ -25,8 +25,8 @@ export class MailService {
 
   async sendForgotPasswordMail(to: string, token: string) {
     this.logger.log(
-      `>>>> [sendForgotPasswordMail] Use with ${JSON.stringify({to,token})}`,
-    ) ;
+      `>>>> [sendForgotPasswordMail] Use with ${JSON.stringify({ to, token })}`,
+    );
 
     const { text, html } = await this.getText(
       'Forgot password',
@@ -37,8 +37,8 @@ export class MailService {
 
   async sendConfirmAccountMail(to: string, token: string) {
     this.logger.log(
-      `>>>> [sendConfirmAccountMail] Use with ${JSON.stringify({to,token})}`,
-    ) ;
+      `>>>> [sendConfirmAccountMail] Use with ${JSON.stringify({ to, token })}`,
+    );
 
     const { text, html } = await this.getText(
       'Confirm your account',
@@ -49,8 +49,8 @@ export class MailService {
 
   async sendAccountConfirmedMail(to: string) {
     this.logger.log(
-      `>>>> [sendAccountConfirmedMail] Use with ${JSON.stringify({to})}`,
-    ) ;
+      `>>>> [sendAccountConfirmedMail] Use with ${JSON.stringify({ to })}`,
+    );
 
     const { text, html } = await this.getText(
       'Account confirmed',

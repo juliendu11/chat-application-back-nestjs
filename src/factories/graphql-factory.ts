@@ -24,7 +24,7 @@ export class GraphqlQLFactory implements GqlOptionsFactory {
       autoSchemaFile: path.join(process.cwd(), 'src/schema.gql'),
       sortSchema: true,
       playground: true,
-      debug: process.env.NODE_ENV === "development",
+      debug: process.env.NODE_ENV === 'development',
       cors: {
         origin: this.config.get('cors.allowedOrigin'),
         credentials: true,
@@ -37,7 +37,7 @@ export class GraphqlQLFactory implements GqlOptionsFactory {
           try {
             const token = connectionParams.headers.authorization;
             if (!token) {
-              throw new AuthenticationError("No token")
+              throw new AuthenticationError('No token');
             }
             const user: JWTTokenData = await this.validateToken(token);
             this.redisService.setUserConnected(user.username, user);

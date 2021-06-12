@@ -14,8 +14,12 @@ export class Message {
   @Prop({ default: new Date() })
   date: Date;
 
-  @Field(() => String)
+  @Field(() => String, { nullable: true })
   @Prop()
-  message: string;
+  message: string | null;
+
+  @Field(() => String, { nullable: true })
+  @Prop()
+  media: string | null;
 }
 export const MessageSchema = SchemaFactory.createForClass(Message);

@@ -1,5 +1,6 @@
 import { UseGuards } from '@nestjs/common';
 import { Resolver, Mutation, Args, Subscription, Query } from '@nestjs/graphql';
+import { UploadingService } from 'src/uploading/uploading.service';
 import { GqlAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../decorators/graphql-current-user.decorator';
 import { getResult } from '../helpers/code.helper';
@@ -13,15 +14,14 @@ import { ConversationSendMessageInput } from './dto/input/conversation-send-mess
 import { GetConversationMessageOutput } from './dto/output/conversation-messages.output';
 import { ConversationNewMessageOutput } from './dto/output/conversation-new-message.output';
 import { ConversationSendMessageOutput } from './dto/output/conversation-send-message.output';
-import {
-  ConversationsOutput,
-} from './dto/output/conversations.output';
+import { ConversationsOutput } from './dto/output/conversations.output';
 
 @Resolver()
 export class ConversationsResolver {
   constructor(
     private readonly conversationsService: ConversationsService,
     private readonly redisService: RedisService,
+    private readonly uploadingService: UploadingService,
   ) {}
 
   @Query(() => ConversationsOutput, { name: 'conversations' })
@@ -72,27 +72,42 @@ export class ConversationsResolver {
     conversationSendMessageInput: ConversationSendMessageInput,
     @CurrentUser() user: JWTTokenData,
   ): Promise<ConversationSendMessageOutput> {
-    const {
-      code,
-      message,
-      value,
-    } = await this.conversationsService.addOrCreate(
+    const getConversation = await this.conversationsService.getOrCreate(
       user._id,
-      conversationSendMessageInput,
+      conversationSendMessageInput.memberId,
     );
-
-    const result = getResult(code);
-    if (result) {
-      this.redisService.conversationNewMessagePublish({
-        last_message: value.last_message,
-        _id: value._id,
-        members: value.members as Member[],
-      });
+    if (!getResult(getConversation.code)) {
+      return {
+        result: getResult(getConversation.code),
+        message: getConversation.message,
+      };
     }
 
+    let mediaPath: string | null = null;
+
+    if (conversationSendMessageInput.media) {
+      const uploadMedia = await this.uploadingService.uploadConversationMedia(
+        getConversation.value._id.toString(),
+        conversationSendMessageInput.media,
+      );
+      if (!getResult(uploadMedia.code) || !uploadMedia.value) {
+        return {
+          result: getResult(uploadMedia.code),
+          message: uploadMedia.message,
+        };
+      }
+      mediaPath = uploadMedia.value;
+    }
+
+    const addNewImage = await this.conversationsService.addOrCreate(
+      user._id,
+      conversationSendMessageInput,
+      mediaPath,
+    );
+
     return {
-      result,
-      message,
+      result: getResult(addNewImage.code),
+      message: addNewImage.message,
     };
   }
 

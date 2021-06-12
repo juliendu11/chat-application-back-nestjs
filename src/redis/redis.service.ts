@@ -57,7 +57,7 @@ export class RedisService {
     this.redisPubSub = new RedisPubSub({
       publisher: new Redis(redisConfig),
       subscriber: new Redis(redisConfig),
-      reviver:dateReviver
+      reviver: dateReviver,
     });
   }
 
@@ -91,32 +91,33 @@ export class RedisService {
     return `${SESSION_KEY}:${username}`;
   }
 
-  async getUserSession(username: string):Promise<ServiceResponseType<RedisSessionData|null>>{
+  async getUserSession(
+    username: string,
+  ): Promise<ServiceResponseType<RedisSessionData | null>> {
     try {
-      console.log(this.getSessionKeyName(username))
-      const session = await this.redis.get(this.getSessionKeyName(username))
+      console.log(this.getSessionKeyName(username));
+      const session = await this.redis.get(this.getSessionKeyName(username));
       if (!session) {
         return {
           code: 404,
-          message:"No session exist",
-          value:null
-        }
+          message: 'No session exist',
+          value: null,
+        };
       }
 
-      const parsed: RedisSessionData = JSON.parse(session)
-      
+      const parsed: RedisSessionData = JSON.parse(session);
+
       return {
         code: 200,
-        message: "",
-        value: parsed
-      }
-
+        message: '',
+        value: parsed,
+      };
     } catch (error) {
       return {
         code: 500,
         message: error.message,
-        value:null
-      }
+        value: null,
+      };
     }
   }
 
@@ -125,9 +126,9 @@ export class RedisService {
   }
 
   async updateTokenInUserSession(username: string, newToken: string) {
-    const value = await this.redis.get(this.getSessionKeyName(username))
-    const session: RedisSessionData = JSON.parse(value)
-    
+    const value = await this.redis.get(this.getSessionKeyName(username));
+    const session: RedisSessionData = JSON.parse(value);
+
     session.jwtToken = newToken;
 
     this.setUserSession(username, session);
@@ -172,31 +173,27 @@ export class RedisService {
         ...conversationNewMessageOutput,
         last_message: {
           ...conversationNewMessageOutput.last_message,
-          date: new Date(conversationNewMessageOutput.last_message.date)
-        }
+          date: new Date(conversationNewMessageOutput.last_message.date),
+        },
       },
     } as ConversationNewMessagePublish);
   }
 
-  memberOnlineListener(){
-    return this.redisPubSub.asyncIterator(MEMBER_ONLINE)
+  memberOnlineListener() {
+    return this.redisPubSub.asyncIterator(MEMBER_ONLINE);
   }
 
-  memberOnlinePublish(
-    memberOnline: MemberOnlineOutputUser,
-  ) {
+  memberOnlinePublish(memberOnline: MemberOnlineOutputUser) {
     this.redisPubSub.publish(MEMBER_ONLINE, {
       memberOnline,
     } as MemberOnlinePublish);
   }
 
-  memberOfflineListener(){
-    return this.redisPubSub.asyncIterator(MEMBER_OFFLINE)
+  memberOfflineListener() {
+    return this.redisPubSub.asyncIterator(MEMBER_OFFLINE);
   }
 
-  memberOfflinePublish(
-    memberOffline: MemberOnlineOutputUser,
-  ) {
+  memberOfflinePublish(memberOffline: MemberOnlineOutputUser) {
     this.redisPubSub.publish(MEMBER_OFFLINE, {
       memberOffline,
     } as MemberOfflinePublish);

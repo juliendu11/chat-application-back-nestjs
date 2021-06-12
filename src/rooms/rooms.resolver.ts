@@ -64,19 +64,23 @@ export class RoomsResolver {
   @Query(() => RoomGetsOutput, { name: 'rooms' })
   @UseGuards(GqlAuthGuard)
   async findAll(): Promise<RoomGetsOutput> {
-    const {code, message, value} = await this.roomsService.findAll();
+    const { code, message, value } = await this.roomsService.findAll();
 
     return {
-      result:getResult(code),
+      result: getResult(code),
       message,
-      value
-    }
+      value,
+    };
   }
 
   @Query(() => RoomGetOutput, { name: 'room' })
   @UseGuards(GqlAuthGuard)
-  async findOne(@Args('roomGetInput') roomGetInput: RoomGetInput): Promise<RoomGetOutput> {
-    const { code, message, value } = await this.roomsService.findOne(roomGetInput.id);
+  async findOne(
+    @Args('roomGetInput') roomGetInput: RoomGetInput,
+  ): Promise<RoomGetOutput> {
+    const { code, message, value } = await this.roomsService.findOne(
+      roomGetInput.id,
+    );
     return {
       result: getResult(code),
       message,
@@ -126,17 +130,16 @@ export class RoomsResolver {
     };
   }
 
-  private async publishRoomMessageAdded(
-    value: Message,
-    id:string,
-  ) {
+  private async publishRoomMessageAdded(value: Message, id: string) {
     const member = await this.memberService.findOne(
       value.user.toString(),
       ['_id', 'username', 'email', 'profilPic'],
       true,
     );
-    if(!getResult(member.code)||!member.value){
-      throw new Error(`Unable to find ${value.user} for publish new room message`)
+    if (!getResult(member.code) || !member.value) {
+      throw new Error(
+        `Unable to find ${value.user} for publish new room message`,
+      );
     }
 
     value.user = member.value as Member;

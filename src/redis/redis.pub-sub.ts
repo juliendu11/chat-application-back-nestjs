@@ -4,6 +4,5 @@ export const ROOM_DELETE = 'roomAdded';
 
 export const CONVERSATION_NEW_MESSAGE = 'conversationNewMessage';
 
-
-export const MEMBER_ONLINE ="memberOnline"
-export const MEMBER_OFFLINE ="memberOffline"
+export const MEMBER_ONLINE = 'memberOnline';
+export const MEMBER_OFFLINE = 'memberOffline';

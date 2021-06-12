@@ -17,6 +17,7 @@ import { RedisModule } from './redis/redis.module';
 import { AuthModule } from './auth/auth.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { ConversationsModule } from './conversations/conversations.module';
+import { UploadingModule } from './uploading/uploading.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { ConversationsModule } from './conversations/conversations.module';
       rootPath: join(__dirname, '..', 'uploads'),
       serveRoot: '/uploads',
     }),
+    UploadingModule,
     AuthModule,
     MembersModule,
     MailModule,

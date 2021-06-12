@@ -7,7 +7,7 @@ import {
   Query,
   Subscription,
 } from '@nestjs/graphql';
-import { Request,Response } from 'express';
+import { Request, Response } from 'express';
 import { fieldsList } from 'graphql-fields-list';
 import { MembersService } from './members.service';
 import { Member } from './entities/member.entity';
@@ -27,7 +27,6 @@ import { GqlAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../decorators/graphql-current-user.decorator';
 import { JWTTokenData } from '../types/JWTToken';
 import { RedisService } from '../redis/redis.service';
-import { MemberOnlineOutput, MemberOnlineOutputUser } from './dto/ouput/member-online.ouput';
 import { MembersInfoOutput } from './dto/ouput/members-info.output';
 import { MembersUpdateProfilPicInput } from './dto/input/members-update-profil-pic-input';
 import { MEMBER_OFFLINE, MEMBER_ONLINE } from 'src/redis/redis.pub-sub';
@@ -35,6 +34,11 @@ import { RoomMessageAddedOuput } from 'src/rooms/dto/output/room-message-added.o
 import { LoginResult } from 'src/types/LoginResult';
 import { MemberMyInformationOutput } from './dto/ouput/member-my-information.output';
 import { MemberRefreshTokenOutput } from './dto/ouput/member-refresh-token.output';
+import {
+  MemberOnlineOutput,
+  MemberOnlineOutputUser,
+} from './dto/ouput/member-online.ouput';
+import { UploadingService } from 'src/uploading/uploading.service';
 
 @Resolver(() => Member)
 export class MembersResolver {
@@ -43,11 +47,13 @@ export class MembersResolver {
     private readonly configService: ConfigService,
     private readonly mailService: MailService,
     private readonly redisService: RedisService,
+    private readonly uploadingService: UploadingService,
   ) {}
 
   @Mutation(() => MemberRegisterOutput)
   async memberRegister(
-    @Args('memberRegisterMemberInput') memberRegisterMemberInput: MemberRegisterInput,
+    @Args('memberRegisterMemberInput')
+    memberRegisterMemberInput: MemberRegisterInput,
   ): Promise<MemberRegisterOutput> {
     const { code, message, value } = await this.membersService.register(
       memberRegisterMemberInput,
@@ -66,7 +72,8 @@ export class MembersResolver {
 
   @Mutation(() => CommonOutput)
   async memberForgotPassword(
-    @Args('memberForgotPasswordInput') memberForgotPasswordInput: MemberForgotPasswordInput,
+    @Args('memberForgotPasswordInput')
+    memberForgotPasswordInput: MemberForgotPasswordInput,
   ): Promise<CommonOutput> {
     const { code, message, value } = await this.membersService.forgotPassword(
       memberForgotPasswordInput.email,
@@ -85,7 +92,8 @@ export class MembersResolver {
 
   @Mutation(() => CommonOutput)
   async memberResetPassword(
-    @Args('memberResetPasswordInput') memberResetPasswordInput: MemberResetPasswordInput,
+    @Args('memberResetPasswordInput')
+    memberResetPasswordInput: MemberResetPasswordInput,
   ): Promise<CommonOutput> {
     const { code, message } = await this.membersService.resetPassword(
       memberResetPasswordInput.email,
@@ -100,7 +108,8 @@ export class MembersResolver {
 
   @Mutation(() => CommonOutput)
   async memberConfirmAccount(
-    @Args('memberConfirmAccountInput') memberConfirmAccountInput: MemberConfirmMemberInput,
+    @Args('memberConfirmAccountInput')
+    memberConfirmAccountInput: MemberConfirmMemberInput,
   ): Promise<CommonOutput> {
     const { code, message, value } = await this.membersService.confirmAccount(
       memberConfirmAccountInput.email,
@@ -133,9 +142,9 @@ export class MembersResolver {
         username: value.member.username,
         _id: value.member._id.toString(),
         jwtToken: value.token,
-        refreshToken:value.refreshToken,
-        profilPic:value.member.profilPic,
-      })
+        refreshToken: value.refreshToken,
+        profilPic: value.member.profilPic,
+      });
     }
 
     return {
@@ -154,7 +163,7 @@ export class MembersResolver {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-      }
+      },
     );
   }
 
@@ -165,21 +174,33 @@ export class MembersResolver {
     membersUpdateProfilPicInput: MembersUpdateProfilPicInput,
     @CurrentUser() user: JWTTokenData,
   ): Promise<CommonOutput> {
-    const { code, message } = await this.membersService.updateProfilPic(
+    const findMember = await this.membersService.findOne(
       user._id,
-      membersUpdateProfilPicInput,
+      ['username'],
+      true,
+    );
+
+    if (!getResult(findMember.code) || !findMember.value) {
+      return {
+        result: getResult(findMember.code),
+        message: findMember.message,
+      };
+    }
+
+    const uploadImage = await this.uploadingService.uploadProfilPic(
+      user._id,
+      membersUpdateProfilPicInput.filesSelected,
+      findMember.value.username,
     );
 
     return {
-      result: getResult(code),
-      message,
+      result: getResult(uploadImage.code),
+      message: uploadImage.message,
     };
   }
 
   @Query(() => MemberRefreshTokenOutput)
-  async memberRefreshToken(
-    @Context() ctx
-  ): Promise<MemberRefreshTokenOutput> {
+  async memberRefreshToken(@Context() ctx): Promise<MemberRefreshTokenOutput> {
     const refreshToken = (<Request>ctx.req).cookies[
       this.configService.get('token.refreshTokenName')
     ];
@@ -187,9 +208,9 @@ export class MembersResolver {
     if (!refreshToken) {
       return {
         result: false,
-        message: "Unable to find refresh token",
-        newToken:null
-      }
+        message: 'Unable to find refresh token',
+        newToken: null,
+      };
     }
 
     const token = (<Request>ctx.req).headers.authorization;
@@ -197,39 +218,52 @@ export class MembersResolver {
     if (!token) {
       return {
         result: false,
-        message: "Unable to find token",
-        newToken:null
-      }
+        message: 'Unable to find token',
+        newToken: null,
+      };
     }
 
-    const { code, message, value } = await this.membersService.generateNewTokenFromRefreshToken(token, refreshToken);
-    
-    const result = getResult(code)
+    const {
+      code,
+      message,
+      value,
+    } = await this.membersService.generateNewTokenFromRefreshToken(
+      token,
+      refreshToken,
+    );
+
+    const result = getResult(code);
     if (result && value) {
-      this.redisService.updateTokenInUserSession(value.username, value.newToken)
+      this.redisService.updateTokenInUserSession(
+        value.username,
+        value.newToken,
+      );
     }
 
     return {
       result,
       message,
-      newToken:value ? value.newToken :""
-    }
+      newToken: value ? value.newToken : '',
+    };
   }
 
   @Query(() => MemberMyInformationOutput)
   @UseGuards(GqlAuthGuard)
-  async memberMyInformation(@CurrentUser() user: JWTTokenData, @Info() info):Promise<MemberMyInformationOutput> {
-    const {code, message, value} = await this.membersService.getMyInfo(
+  async memberMyInformation(
+    @CurrentUser() user: JWTTokenData,
+    @Info() info,
+  ): Promise<MemberMyInformationOutput> {
+    const { code, message, value } = await this.membersService.getMyInfo(
       user._id,
-      fieldsList(info, {path:"value"}),
+      fieldsList(info, { path: 'value' }),
       true,
     );
 
     return {
-      result:getResult(code),
+      result: getResult(code),
       message,
-      value
-    }
+      value,
+    };
   }
 
   @Query(() => MemberOnlineOutput)
@@ -246,7 +280,7 @@ export class MembersResolver {
   @Query(() => MembersInfoOutput)
   @UseGuards(GqlAuthGuard)
   async membersInfo(): Promise<MembersInfoOutput> {
-    const {code, message, value} = await this.membersService.findAll(
+    const { code, message, value } = await this.membersService.findAll(
       ['_id', 'username', 'email', 'profilPic', 'isOnline'],
       true,
     );

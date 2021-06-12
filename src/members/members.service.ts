@@ -3,9 +3,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
 import * as dayjs from 'dayjs';
 import * as jwt from 'jsonwebtoken';
-import * as path from 'path';
-import { createWriteStream, ReadStream } from 'fs';
-import { mkdir } from 'fs/promises';
 import { Model, Types } from 'mongoose';
 import { NestjsWinstonLoggerService } from 'nestjs-winston-logger';
 import { ConfigService, InjectConfig } from 'nestjs-config';
@@ -16,10 +13,9 @@ import { LoginResult } from '../types/LoginResult';
 import { MemberLoginInput } from './dto/input/member-login.input';
 import { MemberRegisterInput } from './dto/input/member-register.input';
 import { Member, MemberDocument } from './entities/member.entity';
-import { MembersUpdateProfilPicInput } from './dto/input/members-update-profil-pic-input';
-import { getResult } from 'src/helpers/code.helper';
-import { RedisService } from 'src/redis/redis.service';
-import { RefreshTokenResult } from 'src/types/RefreshTokenResult';
+import { getResult } from '../helpers/code.helper';
+import { RedisService } from '../redis/redis.service';
+import { RefreshTokenResult } from '../types/RefreshTokenResult';
 
 @Injectable()
 export class MembersService {
@@ -27,18 +23,10 @@ export class MembersService {
     @InjectModel(Member.name) private memberModel: Model<MemberDocument>,
     @InjectConfig() private readonly config: ConfigService,
     private logger: NestjsWinstonLoggerService,
-    private readonly redisService:RedisService
+    private readonly redisService: RedisService,
   ) {
     logger.setContext(MembersService.name);
   }
-
-  private uploadPath = path.resolve(
-    __dirname,
-    '..',
-    '..',
-    'uploads',
-    'pictures',
-  );
 
   async findAll(
     selectedFields = [],
@@ -113,83 +101,6 @@ export class MembersService {
         value: null,
       };
     }
-  }
-
-  async updateProfilPic(
-    id: string,
-    membersUpdateProfilPicInput: MembersUpdateProfilPicInput,
-  ): Promise<ServiceResponseType<undefined>> {
-    try {
-      this.logger.log(
-        `>>>> [updateProfilPic] Use with ${JSON.stringify({
-          id,
-          membersUpdateProfilPicInput,
-        })}`,
-      );
-
-      if (!membersUpdateProfilPicInput.filesSelected) {
-        return { code: 400, message: 'No file to upload', value: null };
-      }
-
-      const getMember = await this.findOne(id, ['username'], true);
-      if (!getResult(getMember.code) || !getMember.value) {
-        const response = {
-          code: 404,
-          message: 'Member account not found',
-          value: null,
-        };
-
-        this.logger.log(
-          `<<<< [updateProfilPic] Response: ${JSON.stringify({ response })}`,
-        );
-
-        return response;
-      }
-
-      const link = path.resolve(
-        this.uploadPath,
-        `${getMember.value.username}.jpg`,
-      );
-
-      await mkdir(this.uploadPath, { recursive: true });
-
-      const {
-        createReadStream,
-      } = await membersUpdateProfilPicInput.filesSelected;
-      const stream = createReadStream();
-
-      const response = await this.writeFile(stream, link);
-
-      this.logger.log(
-        `<<<< [updateProfilPic] Response: ${JSON.stringify({ response })}`,
-      );
-
-      return response;
-    } catch (error) {
-      this.logger.error(`<<<< [updateProfilPic] Exception`, error);
-
-      return {
-        code: 500,
-        message: error.message,
-      };
-    }
-  }
-
-  private async writeFile(
-    stream: ReadStream,
-    link: string,
-  ): Promise<ServiceResponseType<undefined>> {
-    return new Promise((resolve, reject) => {
-      const write = createWriteStream(link);
-      stream
-        .pipe(write)
-        .on('error', (error) => {
-          resolve({ code: 500, message: error.message });
-        })
-        .on('finish', () => {
-          resolve({ code: 200, message: link });
-        });
-    });
   }
 
   async register({
@@ -323,7 +234,7 @@ export class MembersService {
             member.profilPic,
           ),
           refreshToken: this.createRefreshToken(),
-          member:member as Member
+          member: member as Member,
         },
       };
 
@@ -653,14 +564,14 @@ export class MembersService {
   }
 
   public async generateNewTokenFromRefreshToken(
-    oldToken:string,
-    refreshToken: string)
-    : Promise<ServiceResponseType<RefreshTokenResult | null>> {
+    oldToken: string,
+    refreshToken: string,
+  ): Promise<ServiceResponseType<RefreshTokenResult | null>> {
     try {
-      throw new Error("Test");
+      throw new Error('Test');
       this.logger.log(
         `>>>> [generateNewTokenFromRefreshToken] Use with ${JSON.stringify({
-          refreshToken
+          refreshToken,
         })}`,
       );
 
@@ -669,10 +580,16 @@ export class MembersService {
 
       const checkIfTokenIsGood = jwt.decode(oldToken);
       if (!checkIfTokenIsGood) {
-        const response = { code: 403, message: 'Token is invalid', value: null};
+        const response = {
+          code: 403,
+          message: 'Token is invalid',
+          value: null,
+        };
 
         this.logger.log(
-          `<<<< [generateNewTokenFromRefreshToken] Response: ${JSON.stringify(response)}`,
+          `<<<< [generateNewTokenFromRefreshToken] Response: ${JSON.stringify(
+            response,
+          )}`,
         );
 
         return response;
@@ -681,31 +598,48 @@ export class MembersService {
       const findMemberSessionInStore = await this.redisService.getUserSession(
         (checkIfTokenIsGood as JWTToken).data.username,
       );
-      if (!getResult(findMemberSessionInStore.code) || !findMemberSessionInStore.value) {
-        const response = { code: 403, message: findMemberSessionInStore.message, value:null };
+      if (
+        !getResult(findMemberSessionInStore.code) ||
+        !findMemberSessionInStore.value
+      ) {
+        const response = {
+          code: 403,
+          message: findMemberSessionInStore.message,
+          value: null,
+        };
 
         this.logger.log(
-          `<<<< [generateNewTokenFromRefreshToken] Response: ${JSON.stringify(response)}`,
+          `<<<< [generateNewTokenFromRefreshToken] Response: ${JSON.stringify(
+            response,
+          )}`,
         );
 
         return response;
       }
 
       if (refreshToken !== findMemberSessionInStore.value.refreshToken) {
-        const response = { code: 400, message: "Bad refresh token", value:null };
+        const response = {
+          code: 400,
+          message: 'Bad refresh token',
+          value: null,
+        };
 
         this.logger.log(
-          `<<<< [generateNewTokenFromRefreshToken] Response: ${JSON.stringify(response)}`,
+          `<<<< [generateNewTokenFromRefreshToken] Response: ${JSON.stringify(
+            response,
+          )}`,
         );
 
         return response;
       }
 
       if (oldToken !== findMemberSessionInStore.value.jwtToken) {
-        const response = { code: 400, message: "Bad token", value:null };
+        const response = { code: 400, message: 'Bad token', value: null };
 
         this.logger.log(
-          `<<<< [generateNewTokenFromRefreshToken] Response: ${JSON.stringify(response)}`,
+          `<<<< [generateNewTokenFromRefreshToken] Response: ${JSON.stringify(
+            response,
+          )}`,
         );
 
         return response;
@@ -716,30 +650,35 @@ export class MembersService {
         findMemberSessionInStore.value.email,
         findMemberSessionInStore.value.username,
         findMemberSessionInStore.value.profilPic,
-      )
+      );
 
       const response = {
         code: 200,
-        message: "",
+        message: '',
         value: {
           newToken,
-          username:findMemberSessionInStore.value.username
-        }
-      }
+          username: findMemberSessionInStore.value.username,
+        },
+      };
 
       this.logger.log(
-        `<<<< [generateNewTokenFromRefreshToken] Response: ${JSON.stringify(response)}`,
+        `<<<< [generateNewTokenFromRefreshToken] Response: ${JSON.stringify(
+          response,
+        )}`,
       );
 
-      return response
+      return response;
     } catch (error) {
-      this.logger.error(`<<<< [generateNewTokenFromRefreshToken] Exception`, error);
+      this.logger.error(
+        `<<<< [generateNewTokenFromRefreshToken] Exception`,
+        error,
+      );
 
       return {
         code: 500,
-        message:error.message,
-        value:null
-      }
+        message: error.message,
+        value: null,
+      };
     }
   }
 

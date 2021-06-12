@@ -9,6 +9,6 @@ export class MemberRefreshTokenOutput implements GraphqlQLResponseType {
   @Field(() => String)
   message: string;
 
-  @Field(() => String, {nullable:true})
-  newToken: string|null
+  @Field(() => String, { nullable: true })
+  newToken: string | null;
 }

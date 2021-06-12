@@ -45,7 +45,7 @@ export class RoomsService {
         `<<<< [findAll] Response: ${JSON.stringify({ response })}`,
       );
 
-      return response
+      return response;
     } catch (error) {
       this.logger.error(`<<<< [create] Exception`, error);
 
@@ -59,9 +59,7 @@ export class RoomsService {
 
   async findAll(): Promise<ServiceResponseType<Room[]>> {
     try {
-      this.logger.log(
-        `>>>> [findAll] Use`,
-      );
+      this.logger.log(`>>>> [findAll] Use`);
 
       const rooms = await this.roomModel.find({});
       await Promise.all(
@@ -85,7 +83,7 @@ export class RoomsService {
         `<<<< [findAll] Response: ${JSON.stringify({ response })}`,
       );
 
-      return response
+      return response;
     } catch (error) {
       this.logger.error(`<<<< [findAll] Exception`, error);
 
@@ -99,14 +97,11 @@ export class RoomsService {
 
   async findOne(id: string): Promise<ServiceResponseType<Room | null>> {
     try {
-      this.logger.log(
-        `>>>> [findOne] Use with ${JSON.stringify({ id })}`,
-      );
+      this.logger.log(`>>>> [findOne] Use with ${JSON.stringify({ id })}`);
 
       const room = await this.roomModel
         .findOne({ _id: Types.ObjectId(id) })
         .lean();
-
 
       const response = {
         code: 200,
@@ -118,7 +113,7 @@ export class RoomsService {
         `<<<< [findAll] Response: ${JSON.stringify({ response })}`,
       );
 
-      return response
+      return response;
     } catch (error) {
       this.logger.error(`<<<< [findOne] Exception`, error);
 
@@ -137,7 +132,7 @@ export class RoomsService {
   ): Promise<ServiceResponseType<GetRoomMessageValue>> {
     try {
       this.logger.log(
-        `>>>> [getRoomMessage] Use with ${JSON.stringify({ id , skip, limit})}`,
+        `>>>> [getRoomMessage] Use with ${JSON.stringify({ id, skip, limit })}`,
       );
 
       const match = {
@@ -202,7 +197,7 @@ export class RoomsService {
         `<<<< [getRoomMessage] Response: ${JSON.stringify({ response })}`,
       );
 
-      return response
+      return response;
     } catch (error) {
       this.logger.error(`<<<< [getRoomMessage] Exception`, error);
 
@@ -225,20 +220,22 @@ export class RoomsService {
   ): Promise<ServiceResponseType<Message | null>> {
     try {
       this.logger.log(
-        `>>>> [addMessage] Use with ${JSON.stringify({ id , userId, message})}`,
+        `>>>> [addMessage] Use with ${JSON.stringify({ id, userId, message })}`,
       );
 
       const messageItem: Message = {
         message,
         user: Types.ObjectId(userId),
         date: new Date(),
+        media: null,
       };
+
       await this.roomModel.updateOne(
         { _id: Types.ObjectId(id) },
         { $push: { messages: messageItem }, last_message: messageItem },
       );
 
-      const response =  {
+      const response = {
         code: 200,
         message: '',
         value: messageItem,
@@ -248,7 +245,7 @@ export class RoomsService {
         `<<<< [addMessage] Response: ${JSON.stringify({ response })}`,
       );
 
-      return response
+      return response;
     } catch (error) {
       this.logger.error(`<<<< [addMessage] Exception`, error);
 
@@ -262,12 +259,10 @@ export class RoomsService {
 
   async remove(id: string): Promise<ServiceResponseType<undefined>> {
     try {
-      this.logger.log(
-        `>>>> [remove] Use with ${JSON.stringify({ id})}`,
-      );
+      this.logger.log(`>>>> [remove] Use with ${JSON.stringify({ id })}`);
 
       await this.roomModel.deleteOne({ _id: Types.ObjectId(id) });
-      
+
       const response = {
         code: 200,
         message: '',
@@ -277,8 +272,7 @@ export class RoomsService {
         `<<<< [remove] Response: ${JSON.stringify({ response })}`,
       );
 
-      return response
-
+      return response;
     } catch (error) {
       this.logger.error(`<<<< [remove] Exception`, error);
 

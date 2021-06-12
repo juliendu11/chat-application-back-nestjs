@@ -137,7 +137,6 @@ export class ConversationsService {
         .select('-messages')
         .lean(lean);
 
-
       const response = {
         code: 200,
         message: '',
@@ -160,9 +159,54 @@ export class ConversationsService {
     }
   }
 
+  async getOrCreate(
+    toMemberId: string,
+    memberId: string,
+  ): Promise<ServiceResponseType<Conversation | null>> {
+    try {
+      this.logger.log(
+        `>>>> [getOrCreate] Use with ${JSON.stringify({
+          toMemberId,
+          memberId,
+        })}`,
+      );
+
+      let conversationExist = await this.findOne(
+        toMemberId,
+        memberId,
+        ['_id'],
+        true,
+      );
+      if (!conversationExist) {
+        conversationExist = await this.create(toMemberId, memberId, null, null);
+      }
+
+      const response = {
+        code: 200,
+        message: '',
+        value: conversationExist as ConversationDocument,
+      };
+
+      this.logger.log(
+        `<<<< [getOrCreate] Response: ${JSON.stringify({ response })}`,
+      );
+
+      return response;
+    } catch (error) {
+      this.logger.error(`<<<< [getOrCreate] Exception`, error);
+
+      return {
+        code: 500,
+        message: error.message,
+        value: null,
+      };
+    }
+  }
+
   async addOrCreate(
     toMemberId: string,
     { memberId, message }: ConversationSendMessageInput,
+    media: string | null,
   ): Promise<ServiceResponseType<Conversation | null>> {
     try {
       this.logger.log(
@@ -180,9 +224,19 @@ export class ConversationsService {
         true,
       );
       if (conversationExist) {
-        await this.addMessage(conversationExist._id, toMemberId, message);
+        await this.addMessage(
+          conversationExist._id,
+          toMemberId,
+          message,
+          media,
+        );
       } else {
-        conversationExist = await this.create(toMemberId, memberId, message);
+        conversationExist = await this.create(
+          toMemberId,
+          memberId,
+          message,
+          media,
+        );
       }
 
       const conversation = await this.findOneByIdWithPopulate(
@@ -239,9 +293,14 @@ export class ConversationsService {
   private async create(
     toMemberId: string,
     fromMemberId: string,
-    message: string,
+    message: string | null,
+    media: string | null,
   ) {
-    const messageItem: Message = this.createMessageItem(toMemberId, message);
+    const messageItem: Message = this.createMessageItem(
+      toMemberId,
+      message,
+      media,
+    );
 
     const conversation = await this.conversationModel.create({
       members: [Types.ObjectId(toMemberId), Types.ObjectId(fromMemberId)],
@@ -255,9 +314,14 @@ export class ConversationsService {
   private async addMessage(
     conversationId: string,
     toMemberId: string,
-    message: string,
+    message: string | null,
+    media: string | null,
   ) {
-    const messageItem: Message = this.createMessageItem(toMemberId, message);
+    const messageItem: Message = this.createMessageItem(
+      toMemberId,
+      message,
+      media,
+    );
 
     await this.conversationModel.updateOne(
       { _id: Types.ObjectId(conversationId) },
@@ -265,10 +329,15 @@ export class ConversationsService {
     );
   }
 
-  private createMessageItem(toMemberId: string, message: string): Message {
+  private createMessageItem(
+    toMemberId: string,
+    message: string | null,
+    media: string | null,
+  ): Message {
     return {
       date: new Date(),
       message,
+      media,
       user: Types.ObjectId(toMemberId),
     };
   }

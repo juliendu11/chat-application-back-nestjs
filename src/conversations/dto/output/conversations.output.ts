@@ -7,7 +7,6 @@ export class ConversationsOutputValue extends OmitType(Conversation, [
   'messages',
 ] as const) {}
 
-
 @ObjectType()
 export class ConversationsOutput implements GraphqlQLResponseType {
   @Field(() => Boolean)
