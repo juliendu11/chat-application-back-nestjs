@@ -6,7 +6,7 @@ import { NestjsWinstonLoggerService } from 'nestjs-winston-logger';
 import { getResult } from '../helpers/code.helper';
 import { MembersService } from '../members/members.service';
 import { ServiceResponseType } from '../interfaces/GraphqlResponse';
-import { Message } from '../rooms/entities/sub/message.entity';
+import { Message, MessageMedia } from '../rooms/entities/sub/message.entity';
 import { ConversationSendMessageInput } from './dto/input/conversation-send-message.input';
 import { GetConversationMessageValue } from './dto/output/conversation-messages.output';
 import {
@@ -62,6 +62,7 @@ export class ConversationsService {
         { $skip: skip },
         {
           $project: {
+            medias: '$messages.medias',
             message: '$messages.message',
             date: '$messages.date',
             user: '$messages.user',
@@ -206,7 +207,7 @@ export class ConversationsService {
   async addOrCreate(
     toMemberId: string,
     { memberId, message }: ConversationSendMessageInput,
-    media: string[],
+    medias: MessageMedia[],
   ): Promise<ServiceResponseType<Conversation | null>> {
     try {
       this.logger.log(
@@ -228,14 +229,14 @@ export class ConversationsService {
           conversationExist._id,
           toMemberId,
           message,
-          media,
+          medias,
         );
       } else {
         conversationExist = await this.create(
           toMemberId,
           memberId,
           message,
-          media,
+          medias,
         );
       }
 
@@ -294,12 +295,12 @@ export class ConversationsService {
     toMemberId: string,
     fromMemberId: string,
     message: string | null,
-    media: string[],
+    medias: MessageMedia[],
   ) {
     const messageItem: Message = this.createMessageItem(
       toMemberId,
       message,
-      media,
+      medias,
     );
 
     const conversation = await this.conversationModel.create({
@@ -315,12 +316,12 @@ export class ConversationsService {
     conversationId: string,
     toMemberId: string,
     message: string | null,
-    media: string[],
+    medias: MessageMedia[],
   ) {
     const messageItem: Message = this.createMessageItem(
       toMemberId,
       message,
-      media,
+      medias,
     );
 
     await this.conversationModel.updateOne(
@@ -332,12 +333,12 @@ export class ConversationsService {
   private createMessageItem(
     toMemberId: string,
     message: string | null,
-    media: string[],
+    medias: MessageMedia[],
   ): Message {
     return {
       date: new Date(),
       message,
-      media,
+      medias,
       user: Types.ObjectId(toMemberId),
     };
   }

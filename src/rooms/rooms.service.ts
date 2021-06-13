@@ -227,7 +227,7 @@ export class RoomsService {
         message,
         user: Types.ObjectId(userId),
         date: new Date(),
-        media: null,
+        medias: [],
       };
 
       await this.roomModel.updateOne(

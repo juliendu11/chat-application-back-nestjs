@@ -5,6 +5,19 @@ import { Member } from '../../../members/entities/member.entity';
 
 @ObjectType()
 @Schema({ _id: false, id: false })
+export class MessageMedia {
+  @Field(() => String)
+  @Prop()
+  type: string;
+
+  @Field(() => String)
+  @Prop()
+  path: string;
+}
+export const MessageMediaSchema = SchemaFactory.createForClass(MessageMedia);
+
+@ObjectType()
+@Schema({ _id: false, id: false })
 export class Message {
   @Field(() => Member)
   @Prop({ type: Types.ObjectId, ref: 'Member' })
@@ -18,8 +31,11 @@ export class Message {
   @Prop()
   message: string | null;
 
-  @Field(() => [String])
-  @Prop()
-  media: string[];
+  @Field(() => [MessageMedia], { nullable: true })
+  @Prop({
+    type: [MessageMediaSchema],
+    default: [],
+  })
+  medias: MessageMedia[];
 }
 export const MessageSchema = SchemaFactory.createForClass(Message);

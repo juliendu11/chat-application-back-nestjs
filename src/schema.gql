@@ -27,7 +27,7 @@ type ConversationNewMessageOutput {
 }
 
 input ConversationSendMessageInput {
-  media: [Upload!]!
+  medias: [Upload!]!
   memberId: String!
   message: String!
 }
@@ -166,9 +166,14 @@ input MembersUpdateProfilPicInput {
 
 type Message {
   date: DateTime
-  media: [String!]!
+  medias: [MessageMedia!]
   message: String
   user: Member!
+}
+
+type MessageMedia {
+  path: String!
+  type: String!
 }
 
 type Mutation {

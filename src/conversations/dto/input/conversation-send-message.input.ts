@@ -9,5 +9,5 @@ export class ConversationSendMessageInput {
   message: string;
 
   @Field(() => [GraphQLUpload])
-  media: Promise<FileUpload>[];
+  medias: Promise<FileUpload>[];
 }

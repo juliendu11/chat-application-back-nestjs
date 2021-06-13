@@ -6,6 +6,7 @@ import { mkdir } from 'fs/promises';
 import { ServiceResponseType } from '../interfaces/GraphqlResponse';
 import { FileUpload } from 'graphql-upload';
 import { generateRandomToken } from 'src/helpers/random.helper';
+import { MessageMedia } from 'src/rooms/entities/sub/message.entity';
 
 @Injectable()
 export class UploadingService {
@@ -25,7 +26,7 @@ export class UploadingService {
   async uploadConversationMedia(
     conversationId: string,
     filesSelected: Promise<FileUpload>,
-  ): Promise<ServiceResponseType<string>> {
+  ): Promise<ServiceResponseType<MessageMedia | null>> {
     try {
       this.logger.log(
         `>>>> [uploadConversationMedia] Use with ${JSON.stringify({
@@ -34,7 +35,7 @@ export class UploadingService {
       );
 
       if (!filesSelected) {
-        return { code: 400, message: 'No file to upload', value: '' };
+        return { code: 400, message: 'No file to upload', value: null };
       }
 
       const folder = path.resolve(
@@ -56,7 +57,10 @@ export class UploadingService {
       const response = {
         code: writeFile.code,
         message: writeFile.message,
-        value: `/uploads/${conversationId}/${filename}`,
+        value: {
+          path: `/uploads/${conversationId}/${filename}`,
+          type: mimetype,
+        },
       };
 
       this.logger.log(
@@ -72,7 +76,7 @@ export class UploadingService {
       return {
         code: 500,
         message: error.message,
-        value: '',
+        value: null,
       };
     }
   }

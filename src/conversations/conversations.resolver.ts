@@ -1,5 +1,6 @@
 import { UseGuards } from '@nestjs/common';
 import { Resolver, Mutation, Args, Subscription, Query } from '@nestjs/graphql';
+import { MessageMedia } from 'src/rooms/entities/sub/message.entity';
 import { UploadingService } from 'src/uploading/uploading.service';
 import { GqlAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../decorators/graphql-current-user.decorator';
@@ -83,11 +84,11 @@ export class ConversationsResolver {
       };
     }
 
-    const mediaPath: string[] = [];
+    const mediasPath: MessageMedia[] = [];
 
-    if (conversationSendMessageInput.media.length !== 0) {
+    if (conversationSendMessageInput.medias.length !== 0) {
       await Promise.all(
-        conversationSendMessageInput.media.map(async (media) => {
+        conversationSendMessageInput.medias.map(async (media) => {
           const uploadMedia = await this.uploadingService.uploadConversationMedia(
             getConversation.value._id.toString(),
             media,
@@ -95,7 +96,7 @@ export class ConversationsResolver {
           if (!getResult(uploadMedia.code) || !uploadMedia.value) {
             throw new Error(uploadMedia.message);
           }
-          mediaPath.push(uploadMedia.value);
+          mediasPath.push(uploadMedia.value);
         }),
       );
     }
@@ -103,7 +104,7 @@ export class ConversationsResolver {
     const addNewImage = await this.conversationsService.addOrCreate(
       user._id,
       conversationSendMessageInput,
-      mediaPath,
+      mediasPath,
     );
 
     return {
