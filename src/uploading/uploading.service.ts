@@ -58,7 +58,7 @@ export class UploadingService {
         code: writeFile.code,
         message: writeFile.message,
         value: {
-          path: `/uploads/${conversationId}/${filename}`,
+          path: `uploads/conversations/${conversationId}/${filename}`,
           type: mimetype,
         },
       };
