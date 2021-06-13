@@ -107,8 +107,17 @@ export class ConversationsResolver {
       mediasPath,
     );
 
+    const result = getResult(addNewImage.code);
+    if (result) {
+      this.redisService.conversationNewMessagePublish({
+        last_message: addNewImage.value.last_message,
+        _id: addNewImage.value._id,
+        members: addNewImage.value.members as Member[],
+      });
+    }
+
     return {
-      result: getResult(addNewImage.code),
+      result,
       message: addNewImage.message,
     };
   }
