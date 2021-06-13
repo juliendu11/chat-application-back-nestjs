@@ -18,8 +18,8 @@ export class Message {
   @Prop()
   message: string | null;
 
-  @Field(() => String, { nullable: true })
+  @Field(() => [String])
   @Prop()
-  media: string | null;
+  media: string[];
 }
 export const MessageSchema = SchemaFactory.createForClass(Message);

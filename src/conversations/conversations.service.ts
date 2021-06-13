@@ -206,7 +206,7 @@ export class ConversationsService {
   async addOrCreate(
     toMemberId: string,
     { memberId, message }: ConversationSendMessageInput,
-    media: string | null,
+    media: string[],
   ): Promise<ServiceResponseType<Conversation | null>> {
     try {
       this.logger.log(
@@ -294,7 +294,7 @@ export class ConversationsService {
     toMemberId: string,
     fromMemberId: string,
     message: string | null,
-    media: string | null,
+    media: string[],
   ) {
     const messageItem: Message = this.createMessageItem(
       toMemberId,
@@ -315,7 +315,7 @@ export class ConversationsService {
     conversationId: string,
     toMemberId: string,
     message: string | null,
-    media: string | null,
+    media: string[],
   ) {
     const messageItem: Message = this.createMessageItem(
       toMemberId,
@@ -332,7 +332,7 @@ export class ConversationsService {
   private createMessageItem(
     toMemberId: string,
     message: string | null,
-    media: string | null,
+    media: string[],
   ): Message {
     return {
       date: new Date(),

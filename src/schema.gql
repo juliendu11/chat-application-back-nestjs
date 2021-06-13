@@ -27,7 +27,7 @@ type ConversationNewMessageOutput {
 }
 
 input ConversationSendMessageInput {
-  media: Upload!
+  media: [Upload!]!
   memberId: String!
   message: String!
 }
@@ -166,7 +166,7 @@ input MembersUpdateProfilPicInput {
 
 type Message {
   date: DateTime
-  media: String
+  media: [String!]!
   message: String
   user: Member!
 }

@@ -8,6 +8,6 @@ export class ConversationSendMessageInput {
   @Field(() => String)
   message: string;
 
-  @Field(() => GraphQLUpload)
-  media: Promise<FileUpload>;
+  @Field(() => [GraphQLUpload])
+  media: Promise<FileUpload>[];
 }

@@ -83,20 +83,21 @@ export class ConversationsResolver {
       };
     }
 
-    let mediaPath: string | null = null;
+    const mediaPath: string[] = [];
 
-    if (conversationSendMessageInput.media) {
-      const uploadMedia = await this.uploadingService.uploadConversationMedia(
-        getConversation.value._id.toString(),
-        conversationSendMessageInput.media,
+    if (conversationSendMessageInput.media.length !== 0) {
+      await Promise.all(
+        conversationSendMessageInput.media.map(async (media) => {
+          const uploadMedia = await this.uploadingService.uploadConversationMedia(
+            getConversation.value._id.toString(),
+            media,
+          );
+          if (!getResult(uploadMedia.code) || !uploadMedia.value) {
+            throw new Error(uploadMedia.message);
+          }
+          mediaPath.push(uploadMedia.value);
+        }),
       );
-      if (!getResult(uploadMedia.code) || !uploadMedia.value) {
-        return {
-          result: getResult(uploadMedia.code),
-          message: uploadMedia.message,
-        };
-      }
-      mediaPath = uploadMedia.value;
     }
 
     const addNewImage = await this.conversationsService.addOrCreate(
