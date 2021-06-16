@@ -19,8 +19,51 @@ export class UploadingService {
     'conversations',
   );
 
+  private uploadRoomMediaPath = path.resolve(this.uploadPath, 'rooms');
+
   constructor(private logger: NestjsWinstonLoggerService) {
     logger.setContext(UploadingService.name);
+  }
+
+  async uploadRoomMedia(
+    roomId: string,
+    filesSelected: Promise<FileUpload>,
+  ): Promise<ServiceResponseType<MessageMedia | null>> {
+    try {
+      this.logger.log(
+        `>>>> [uploadRoomMedia] Use with ${JSON.stringify({
+          roomId,
+        })}`,
+      );
+
+      if (!filesSelected) {
+        return { code: 400, message: 'No file to upload', value: null };
+      }
+
+      const folder = path.resolve(this.uploadRoomMediaPath, roomId);
+      const response = await this.uploading(
+        folder,
+        roomId,
+        'rooms',
+        filesSelected,
+      );
+
+      this.logger.log(
+        `<<<< [uploadConversationMedia] Response: ${JSON.stringify({
+          response,
+        })}`,
+      );
+
+      return response;
+    } catch (error) {
+      this.logger.error(`<<<< [uploadRoomMedia] Exception`, error);
+
+      return {
+        code: 500,
+        message: error.message,
+        value: null,
+      };
+    }
   }
 
   async uploadConversationMedia(
@@ -42,26 +85,12 @@ export class UploadingService {
         this.uploadConversationMediaPath,
         conversationId,
       );
-
-      const { createReadStream, mimetype } = await filesSelected;
-      const stream = createReadStream();
-
-      const filename = `${generateRandomToken()}.${mimetype.split('/')[1]}`;
-
-      const link = path.resolve(folder, filename);
-
-      await mkdir(folder, { recursive: true });
-
-      const writeFile = await this.writeFile(stream, link);
-
-      const response = {
-        code: writeFile.code,
-        message: writeFile.message,
-        value: {
-          path: `uploads/conversations/${conversationId}/${filename}`,
-          type: mimetype,
-        },
-      };
+      const response = await this.uploading(
+        folder,
+        conversationId,
+        'conversations',
+        filesSelected,
+      );
 
       this.logger.log(
         `<<<< [uploadConversationMedia] Response: ${JSON.stringify({
@@ -79,6 +108,34 @@ export class UploadingService {
         value: null,
       };
     }
+  }
+
+  private async uploading(
+    folder: string,
+    id: string,
+    type: string,
+    filesSelected: Promise<FileUpload>,
+  ) {
+    const { createReadStream, mimetype } = await filesSelected;
+    const stream = createReadStream();
+
+    const filename = `${generateRandomToken()}.${mimetype.split('/')[1]}`;
+
+    const link = path.resolve(folder, filename);
+
+    await mkdir(folder, { recursive: true });
+
+    const writeFile = await this.writeFile(stream, link);
+
+    const response = {
+      code: writeFile.code,
+      message: writeFile.message,
+      value: {
+        path: `uploads/${type}/${id}/${filename}`,
+        type: mimetype,
+      },
+    };
+    return response;
   }
 
   async uploadProfilPic(

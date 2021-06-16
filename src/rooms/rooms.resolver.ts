@@ -119,7 +119,7 @@ export class RoomsResolver {
     if (roomAddMessageInput.medias.length !== 0) {
       await Promise.all(
         roomAddMessageInput.medias.map(async (media) => {
-          const uploadMedia = await this.uploadingService.uploadConversationMedia(
+          const uploadMedia = await this.uploadingService.uploadRoomMedia(
             roomAddMessageInput.id.toString(),
             media,
           );
