@@ -8,7 +8,7 @@ import { ServiceResponseType } from '../interfaces/GraphqlResponse';
 import { RoomCreateInput } from './dto/input/room-create.input';
 import { GetRoomMessageValue } from './dto/output/room-get-message.output';
 import { Room, RoomDocument } from './entities/room.entity';
-import { Message } from './entities/sub/message.entity';
+import { Message, MessageMedia } from './entities/sub/message.entity';
 
 @Injectable()
 export class RoomsService {
@@ -217,17 +217,23 @@ export class RoomsService {
     id: string,
     userId: string,
     message: string,
+    mediaPath: MessageMedia[],
   ): Promise<ServiceResponseType<Message | null>> {
     try {
       this.logger.log(
-        `>>>> [addMessage] Use with ${JSON.stringify({ id, userId, message })}`,
+        `>>>> [addMessage] Use with ${JSON.stringify({
+          id,
+          userId,
+          message,
+          mediaPath,
+        })}`,
       );
 
       const messageItem: Message = {
         message,
         user: Types.ObjectId(userId),
         date: new Date(),
-        medias: [],
+        medias: mediaPath,
       };
 
       await this.roomModel.updateOne(

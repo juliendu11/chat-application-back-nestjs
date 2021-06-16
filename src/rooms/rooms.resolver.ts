@@ -20,17 +20,19 @@ import { MembersService } from '../members/members.service';
 import { RedisService } from '../redis/redis.service';
 import { ROOM_ADDED, ROOM_MESSAGE_ADDED } from '../redis/redis.pub-sub';
 import { Member } from '../members/entities/member.entity';
-import { Message } from './entities/sub/message.entity';
+import { Message, MessageMedia } from './entities/sub/message.entity';
 import { RoomGetMessageOuput } from './dto/output/room-get-message.output';
 import { RoomGetMessageInput } from './dto/input/room-get-message.input';
 import { RoomGetsOutput } from './dto/output/room-gets.output';
 import { RoomGetInput } from './dto/input/room-get.input';
+import { UploadingService } from 'src/uploading/uploading.service';
 @Resolver(() => Room)
 export class RoomsResolver {
   constructor(
     private readonly roomsService: RoomsService,
     private readonly memberService: MembersService,
     private readonly redisService: RedisService,
+    private readonly uploadingService: UploadingService,
   ) {}
 
   @Mutation(() => RoomCreateOutput)
@@ -112,10 +114,28 @@ export class RoomsResolver {
     @Args('roomAddMessageInput') roomAddMessageInput: RoomAddMessageInput,
     @CurrentUser() user: JWTTokenData,
   ): Promise<RoomAddMessageOutput> {
+    const mediasPath: MessageMedia[] = [];
+
+    if (roomAddMessageInput.medias.length !== 0) {
+      await Promise.all(
+        roomAddMessageInput.medias.map(async (media) => {
+          const uploadMedia = await this.uploadingService.uploadConversationMedia(
+            roomAddMessageInput.id.toString(),
+            media,
+          );
+          if (!getResult(uploadMedia.code) || !uploadMedia.value) {
+            throw new Error(uploadMedia.message);
+          }
+          mediasPath.push(uploadMedia.value);
+        }),
+      );
+    }
+
     const { code, message, value } = await this.roomsService.addMessage(
       roomAddMessageInput.id,
       user._id,
       roomAddMessageInput.message,
+      mediasPath,
     );
 
     const result = getResult(code);

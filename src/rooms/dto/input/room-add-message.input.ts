@@ -1,4 +1,5 @@
 import { InputType, Field } from '@nestjs/graphql';
+import { GraphQLUpload, FileUpload } from 'graphql-upload';
 
 @InputType()
 export class RoomAddMessageInput {
@@ -7,4 +8,7 @@ export class RoomAddMessageInput {
 
   @Field(() => String)
   message: string;
+
+  @Field(() => [GraphQLUpload])
+  medias: Promise<FileUpload>[];
 }

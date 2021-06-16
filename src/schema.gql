@@ -218,6 +218,7 @@ type Room {
 
 input RoomAddMessageInput {
   id: String!
+  medias: [Upload!]!
   message: String!
 }
 

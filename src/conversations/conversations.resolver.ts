@@ -101,24 +101,24 @@ export class ConversationsResolver {
       );
     }
 
-    const addNewImage = await this.conversationsService.addOrCreate(
+    const addNewMessage = await this.conversationsService.addOrCreate(
       user._id,
       conversationSendMessageInput,
       mediasPath,
     );
 
-    const result = getResult(addNewImage.code);
+    const result = getResult(addNewMessage.code);
     if (result) {
       this.redisService.conversationNewMessagePublish({
-        last_message: addNewImage.value.last_message,
-        _id: addNewImage.value._id,
-        members: addNewImage.value.members as Member[],
+        last_message: addNewMessage.value.last_message,
+        _id: addNewMessage.value._id,
+        members: addNewMessage.value.members as Member[],
       });
     }
 
     return {
       result,
-      message: addNewImage.message,
+      message: addNewMessage.message,
     };
   }
 

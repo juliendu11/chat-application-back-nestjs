@@ -8,6 +8,7 @@ import { RoomsResolver } from './rooms.resolver';
 import { Room, RoomSchema } from './entities/room.entity';
 import { MembersModule } from '../members/members.module';
 import * as DailyRotateFile from 'winston-daily-rotate-file';
+import { UploadingModule } from 'src/uploading/uploading.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import * as DailyRotateFile from 'winston-daily-rotate-file';
     }),
     MongooseModule.forFeature([{ name: Room.name, schema: RoomSchema }]),
     MembersModule,
+    UploadingModule,
   ],
   providers: [RoomsResolver, RoomsService],
 })
