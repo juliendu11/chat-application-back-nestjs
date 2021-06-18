@@ -10,6 +10,8 @@ RUN npm install --only=development
 
 COPY . .
 
+RUN npm run build
+RUN npm run build:post
 
 FROM node:14 as production
 
@@ -23,3 +25,6 @@ COPY package*.json ./
 RUN npm install --only=production
 
 COPY . .
+
+RUN npm run build
+RUN npm run build:post
