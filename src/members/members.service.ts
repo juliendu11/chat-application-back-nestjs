@@ -262,7 +262,9 @@ export class MembersService {
         })}`,
       );
 
-      const member = await this.memberModel.findOne({ email });
+      const member = await this.memberModel
+        .findOne({ email })
+        .select('email forgot_password');
       if (!member) {
         const response = { code: 401, message: 'Bad information', value: null };
 
@@ -284,6 +286,7 @@ export class MembersService {
       const response = {
         code: 200,
         message: 'An email has been sent to you to change your password',
+        value: member,
       };
 
       this.logger.log(

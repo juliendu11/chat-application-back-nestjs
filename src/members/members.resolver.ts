@@ -79,13 +79,16 @@ export class MembersResolver {
       memberForgotPasswordInput.email,
     );
 
-    this.mailService.sendForgotPasswordMail(
-      value.email,
-      value.forgot_password.token,
-    );
+    const result = getResult(code);
+    if (result) {
+      this.mailService.sendForgotPasswordMail(
+        value.email,
+        value.forgot_password.token,
+      );
+    }
 
     return {
-      result: getResult(code),
+      result,
       message,
     };
   }
@@ -116,10 +119,13 @@ export class MembersResolver {
       memberConfirmAccountInput.token,
     );
 
-    this.mailService.sendAccountConfirmedMail(value.email);
+    const result = getResult(code);
+    if (result) {
+      this.mailService.sendAccountConfirmedMail(value.email);
+    }
 
     return {
-      result: getResult(code),
+      result,
       message,
     };
   }
