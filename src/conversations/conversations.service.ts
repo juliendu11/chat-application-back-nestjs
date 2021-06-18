@@ -160,7 +160,7 @@ export class ConversationsService {
     }
   }
 
-  async getOrCreate(
+  async get(
     toMemberId: string,
     memberId: string,
   ): Promise<ServiceResponseType<Conversation | null>> {
@@ -172,15 +172,12 @@ export class ConversationsService {
         })}`,
       );
 
-      let conversationExist = await this.findOne(
+      const conversationExist = await this.findOne(
         toMemberId,
         memberId,
         ['_id'],
         true,
       );
-      if (!conversationExist) {
-        conversationExist = await this.create(toMemberId, memberId, null, null);
-      }
 
       const response = {
         code: 200,
@@ -204,7 +201,7 @@ export class ConversationsService {
     }
   }
 
-  async addOrCreate(
+  async addMessage(
     toMemberId: string,
     { memberId, message }: ConversationSendMessageInput,
     medias: MessageMedia[],
@@ -218,27 +215,23 @@ export class ConversationsService {
         })}`,
       );
 
-      let conversationExist = await this.findOne(
+      const conversationExist = await this.findOne(
         toMemberId,
         memberId,
         ['_id'],
         true,
       );
-      if (conversationExist) {
-        await this.addMessage(
-          conversationExist._id,
-          toMemberId,
-          message,
-          medias,
-        );
-      } else {
-        conversationExist = await this.create(
-          toMemberId,
-          memberId,
-          message,
-          medias,
-        );
-      }
+
+      const messageItem: Message = this.createMessageItem(
+        toMemberId,
+        message,
+        medias,
+      );
+
+      await this.conversationModel.updateOne(
+        { _id: Types.ObjectId(conversationExist._id) },
+        { $push: { messages: messageItem }, last_message: messageItem },
+      );
 
       const conversation = await this.findOneByIdWithPopulate(
         (conversationExist as ConversationDocument)._id.toString(),
@@ -291,43 +284,48 @@ export class ConversationsService {
       .lean(lean);
   }
 
-  private async create(
+  async create(
     toMemberId: string,
     fromMemberId: string,
-    message: string | null,
-    medias: MessageMedia[],
-  ) {
-    const messageItem: Message = this.createMessageItem(
-      toMemberId,
-      message,
-      medias,
-    );
+  ): Promise<ServiceResponseType<ConversationDocument | null>> {
+    try {
+      this.logger.log(
+        `>>>> [create] Use with ${JSON.stringify({
+          toMemberId,
+          fromMemberId,
+        })}`,
+      );
 
-    const conversation = await this.conversationModel.create({
-      members: [Types.ObjectId(toMemberId), Types.ObjectId(fromMemberId)],
-      messages: [messageItem],
-      last_message: messageItem,
-    });
+      const conversation = await this.conversationModel.create({
+        members: [Types.ObjectId(toMemberId), Types.ObjectId(fromMemberId)],
+        messages: [],
+        last_message: null,
+      });
 
-    return conversation;
-  }
+      await conversation
+        .populate('members', 'email username _id profilPic isOnline')
+        .execPopulate();
 
-  private async addMessage(
-    conversationId: string,
-    toMemberId: string,
-    message: string | null,
-    medias: MessageMedia[],
-  ) {
-    const messageItem: Message = this.createMessageItem(
-      toMemberId,
-      message,
-      medias,
-    );
+      const response = {
+        code: 200,
+        message: '',
+        value: conversation,
+      };
 
-    await this.conversationModel.updateOne(
-      { _id: Types.ObjectId(conversationId) },
-      { $push: { messages: messageItem }, last_message: messageItem },
-    );
+      this.logger.log(
+        `<<<< [create] Response: ${JSON.stringify({ response })}`,
+      );
+
+      return response;
+    } catch (error) {
+      this.logger.error(`<<<< [create] Exception`, error);
+
+      return {
+        code: 500,
+        message: error.message,
+        value: null,
+      };
+    }
   }
 
   private createMessageItem(

@@ -10,6 +10,7 @@ import { RoomAddedPublish } from './publish-dto/room-added.publish';
 import { RoomMessageAddedPublish } from './publish-dto/room-message-added.publish';
 import {
   CONVERSATION_NEW_MESSAGE,
+  CONVERSATION_ADDED,
   MEMBER_OFFLINE,
   MEMBER_ONLINE,
   ROOM_ADDED,
@@ -23,6 +24,9 @@ import { MemberOnlinePublish } from './publish-dto/member-online.publish';
 import { MemberOfflinePublish } from './publish-dto/member-offline.publish';
 import { RedisSessionData } from 'src/types/RedisSessionData';
 import { ServiceResponseType } from 'src/interfaces/GraphqlResponse';
+import { Conversation } from 'src/conversations/entities/conversation.entity';
+import { ConversationAddedPublish } from './publish-dto/conversation-added.publish';
+import { ConversationsOutputValue } from 'src/conversations/dto/output/conversations.output';
 
 const ONLINE_KEY = 'ONLINE';
 const SESSION_KEY = 'SESSION';
@@ -159,6 +163,16 @@ export class RedisService {
         id,
       },
     } as RoomMessageAddedPublish);
+  }
+
+  conversationAddedListener() {
+    return this.redisPubSub.asyncIterator(CONVERSATION_ADDED);
+  }
+
+  conversationAddedPublish(conversation: ConversationsOutputValue) {
+    this.redisPubSub.publish(CONVERSATION_ADDED, {
+      conversationAdded: conversation,
+    } as ConversationAddedPublish);
   }
 
   conversationNewMessageListener() {

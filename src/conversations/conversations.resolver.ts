@@ -6,7 +6,10 @@ import { GqlAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../decorators/graphql-current-user.decorator';
 import { getResult } from '../helpers/code.helper';
 import { Member } from '../members/entities/member.entity';
-import { CONVERSATION_NEW_MESSAGE } from '../redis/redis.pub-sub';
+import {
+  CONVERSATION_ADDED,
+  CONVERSATION_NEW_MESSAGE,
+} from '../redis/redis.pub-sub';
 import { RedisService } from '../redis/redis.service';
 import { JWTTokenData } from '../types/JWTToken';
 import { ConversationsService } from './conversations.service';
@@ -15,7 +18,11 @@ import { ConversationSendMessageInput } from './dto/input/conversation-send-mess
 import { GetConversationMessageOutput } from './dto/output/conversation-messages.output';
 import { ConversationNewMessageOutput } from './dto/output/conversation-new-message.output';
 import { ConversationSendMessageOutput } from './dto/output/conversation-send-message.output';
-import { ConversationsOutput } from './dto/output/conversations.output';
+import {
+  ConversationsOutput,
+  ConversationsOutputValue,
+} from './dto/output/conversations.output';
+import { Conversation } from './entities/conversation.entity';
 
 @Resolver()
 export class ConversationsResolver {
@@ -73,15 +80,31 @@ export class ConversationsResolver {
     conversationSendMessageInput: ConversationSendMessageInput,
     @CurrentUser() user: JWTTokenData,
   ): Promise<ConversationSendMessageOutput> {
-    const getConversation = await this.conversationsService.getOrCreate(
+    const getConversation = await this.conversationsService.get(
       user._id,
       conversationSendMessageInput.memberId,
     );
+
     if (!getResult(getConversation.code)) {
       return {
-        result: getResult(getConversation.code),
+        result: false,
         message: getConversation.message,
       };
+    }
+
+    if (!getConversation.value) {
+      const createConversation = await this.conversationsService.create(
+        user._id,
+        conversationSendMessageInput.memberId,
+      );
+      if (!getResult(createConversation.code) || !createConversation.value) {
+        return {
+          result: false,
+          message: createConversation.message,
+        };
+      }
+
+      this.redisService.conversationAddedPublish(createConversation.value);
     }
 
     const mediasPath: MessageMedia[] = [];
@@ -101,7 +124,7 @@ export class ConversationsResolver {
       );
     }
 
-    const addNewMessage = await this.conversationsService.addOrCreate(
+    const addNewMessage = await this.conversationsService.addMessage(
       user._id,
       conversationSendMessageInput,
       mediasPath,
@@ -120,6 +143,13 @@ export class ConversationsResolver {
       result,
       message: addNewMessage.message,
     };
+  }
+
+  @Subscription(() => ConversationsOutputValue, {
+    name: CONVERSATION_ADDED,
+  })
+  roomAddedHandler() {
+    return this.redisService.conversationAddedListener();
   }
 
   @Subscription(() => ConversationNewMessageOutput, {
