@@ -31,7 +31,13 @@ export class GraphqlQLFactory implements GqlOptionsFactory {
       },
       installSubscriptionHandlers: true,
       uploads: false,
-      context: ({ req, res }) => ({ req, res }),
+      context: ({ req, res, connection }) => {
+        return {
+          req,
+          res,
+          user: connection ? connection.context.currentUser : null,
+        };
+      },
       subscriptions: {
         onConnect: async (connectionParams: any, ws) => {
           try {

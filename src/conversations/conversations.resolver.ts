@@ -1,5 +1,12 @@
 import { UseGuards } from '@nestjs/common';
-import { Resolver, Mutation, Args, Subscription, Query } from '@nestjs/graphql';
+import {
+  Resolver,
+  Mutation,
+  Args,
+  Subscription,
+  Query,
+  GqlExecutionContext,
+} from '@nestjs/graphql';
 import { MessageMedia } from 'src/rooms/entities/sub/message.entity';
 import { UploadingService } from 'src/uploading/uploading.service';
 import { GqlAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -147,6 +154,11 @@ export class ConversationsResolver {
 
   @Subscription(() => ConversationsOutputValue, {
     name: CONVERSATION_ADDED,
+    filter: (payload, _, context) => {
+      return payload.conversationAdded.members.some(
+        (x) => x._id.toString() === context.user._id.toString(),
+      );
+    },
   })
   roomAddedHandler() {
     return this.redisService.conversationAddedListener();
@@ -154,6 +166,11 @@ export class ConversationsResolver {
 
   @Subscription(() => ConversationNewMessageOutput, {
     name: CONVERSATION_NEW_MESSAGE,
+    filter: (payload, _, context) => {
+      return payload.conversationNewMessage.members.some(
+        (x) => x._id.toString() === context.user._id.toString(),
+      );
+    },
   })
   conversationNewMessageHandler() {
     return this.redisService.conversationNewMessageListener();
