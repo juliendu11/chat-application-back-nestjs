@@ -157,6 +157,7 @@ export class RoomsService {
         { $skip: skip },
         {
           $project: {
+            medias: '$messages.medias',
             message: '$messages.message',
             date: '$messages.date',
             user: '$messages.user',
