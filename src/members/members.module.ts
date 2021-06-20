@@ -8,7 +8,7 @@ import { MailModule } from '../mail/mail.module';
 import { MembersService } from './members.service';
 import { MembersResolver } from './members.resolver';
 import * as DailyRotateFile from 'winston-daily-rotate-file';
-import { UploadingModule } from 'src/uploading/uploading.module';
+import { UploadingModule } from '../uploading/uploading.module';
 @Global()
 @Module({
   imports: [

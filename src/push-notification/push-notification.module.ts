@@ -1,23 +1,13 @@
 import { Module } from '@nestjs/common';
-import { ConversationsService } from './conversations.service';
-import { ConversationsResolver } from './conversations.resolver';
-import { MongooseModule } from '@nestjs/mongoose';
 import { NestjsWinstonLoggerModule } from 'nestjs-winston-logger';
 import { format, transports } from 'winston';
-
-import {
-  Conversation,
-  ConversationSchema,
-} from './entities/conversation.entity';
 import * as DailyRotateFile from 'winston-daily-rotate-file';
-import { UploadingModule } from '../uploading/uploading.module';
-import { EventEmitterModule } from '@nestjs/event-emitter';
+
+import { PushNotificationService } from './push-notification.service';
+import { PushNotificationResolver } from './push-notification.resolver';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Conversation.name, schema: ConversationSchema },
-    ]),
     NestjsWinstonLoggerModule.forRoot({
       format: format.combine(
         format.timestamp({ format: 'isoDateTime' }),
@@ -36,9 +26,8 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
         }),
       ],
     }),
-    UploadingModule,
-    EventEmitterModule.forRoot(),
   ],
-  providers: [ConversationsResolver, ConversationsService],
+  providers: [PushNotificationResolver, PushNotificationService],
+  exports: [PushNotificationService],
 })
-export class ConversationsModule {}
+export class PushNotificationModule {}

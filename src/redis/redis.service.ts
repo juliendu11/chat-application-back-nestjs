@@ -24,7 +24,6 @@ import { MemberOnlinePublish } from './publish-dto/member-online.publish';
 import { MemberOfflinePublish } from './publish-dto/member-offline.publish';
 import { RedisSessionData } from 'src/types/RedisSessionData';
 import { ServiceResponseType } from 'src/interfaces/GraphqlResponse';
-import { Conversation } from 'src/conversations/entities/conversation.entity';
 import { ConversationAddedPublish } from './publish-dto/conversation-added.publish';
 import { ConversationsOutputValue } from 'src/conversations/dto/output/conversations.output';
 
@@ -77,6 +76,19 @@ export class RedisService {
     this.redis.del(this.getOnlineKeyName(username));
   }
 
+  async userIsConnected(username: string): Promise<boolean> {
+    try {
+      const data = await this.redis.get(this.getOnlineKeyName(username));
+      if (!data) {
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
   async getUsersConncted(): Promise<JWTTokenData[]> {
     const users: JWTTokenData[] = [];
 
@@ -99,7 +111,6 @@ export class RedisService {
     username: string,
   ): Promise<ServiceResponseType<RedisSessionData | null>> {
     try {
-      console.log(this.getSessionKeyName(username));
       const session = await this.redis.get(this.getSessionKeyName(username));
       if (!session) {
         return {

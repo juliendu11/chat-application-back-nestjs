@@ -18,6 +18,8 @@ import { AuthModule } from './auth/auth.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { ConversationsModule } from './conversations/conversations.module';
 import { UploadingModule } from './uploading/uploading.module';
+import { PushNotificationModule } from './push-notification/push-notification.module';
+import { MessageEventModule } from './messages-event/message-event.module';
 
 @Module({
   imports: [
@@ -42,6 +44,8 @@ import { UploadingModule } from './uploading/uploading.module';
     RoomsModule,
     RedisModule,
     ConversationsModule,
+    PushNotificationModule,
+    MessageEventModule,
   ],
 })
 export class AppModule {

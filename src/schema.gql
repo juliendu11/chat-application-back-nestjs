@@ -87,6 +87,7 @@ type Member {
   isOnline: Boolean!
   password: String!
   profilPic: String
+  push_subscriptions: [WebPushSubscription!]!
   registration_information: RegistrationInformation!
   rooms: [Room!]!
   username: String!
@@ -184,8 +185,21 @@ type Mutation {
   memberRegister(memberRegisterMemberInput: MemberRegisterInput!): MemberRegisterOutput!
   memberResetPassword(memberResetPasswordInput: MemberResetPasswordInput!): CommonOutput!
   membersUpdateProfilPic(membersUpdateProfilPicInput: MembersUpdateProfilPicInput!): CommonOutput!
+  pushNotificationSubscribe(pushNotificationSubscribeInput: PushNotificationSubscribeInput!): CommonOutput!
   roomAddMessage(roomAddMessageInput: RoomAddMessageInput!): RoomAddMessageOutput!
   roomCreate(roomCreateInput: RoomCreateInput!): RoomCreateOutput!
+}
+
+type PushNotificationPublicKey {
+  message: String!
+  result: Boolean!
+  value: String!
+}
+
+input PushNotificationSubscribeInput {
+  auth: String!
+  endpoint: String!
+  p256dh: String!
 }
 
 type Query {
@@ -195,6 +209,7 @@ type Query {
   memberRefreshToken: MemberRefreshTokenOutput!
   membersInfo: MembersInfoOutput!
   membersOnline: MemberOnlineOutput!
+  pushNotificationPublicKey: PushNotificationPublicKey!
   room(roomGetInput: RoomGetInput!): RoomGetOutput!
   roomMessage(roomGetMessageInput: RoomGetMessageInput!): RoomGetMessageOuput!
   rooms: RoomGetsOutput!
@@ -283,3 +298,9 @@ type Subscription {
 
 """The `Upload` scalar type represents a file upload."""
 scalar Upload
+
+type WebPushSubscription {
+  auth: String!
+  endpoint: String!
+  p256dh: String!
+}

@@ -12,6 +12,10 @@ import {
   RegistrationInformation,
   RegistrationInformationSchema,
 } from './sub/registration-information.entity';
+import {
+  WebPushSubscription,
+  WebPushSubscriptionSchema,
+} from './sub/web-push-subscription.entity';
 
 @ObjectType()
 @Schema()
@@ -61,6 +65,10 @@ export class Member {
   @Field(() => [Conversation])
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Conversation' }] })
   conversations: Types.ObjectId[] | Conversation[];
+
+  @Field(() => [WebPushSubscription])
+  @Prop({ type: [WebPushSubscriptionSchema], default: [] })
+  push_subscriptions: WebPushSubscription[];
 }
 export type MemberDocument = Member & Document;
 

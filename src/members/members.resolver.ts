@@ -141,7 +141,7 @@ export class MembersResolver {
 
     const result = getResult(code);
     if (result) {
-      this.generateRefreshTokenCookie(ctx, value);
+      this.generateRefreshTokenCookie(ctx, value.refreshToken);
 
       this.redisService.setUserSession(value.member.username, {
         email: value.member.email,
@@ -160,12 +160,12 @@ export class MembersResolver {
     };
   }
 
-  private generateRefreshTokenCookie(ctx: any, value: LoginResult) {
+  private generateRefreshTokenCookie(ctx: any, refreshToken: string) {
     (ctx.res as Response).cookie(
-      this.configService.get('token.refreshTokenName'),
-      value.refreshToken,
+      this.configService.get('refreshtoken.name'),
+      refreshToken,
       {
-        maxAge: 2147483647,
+        maxAge: 14 * 24 * 60 * 60 * 1000,
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',

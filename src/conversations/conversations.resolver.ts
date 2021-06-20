@@ -1,12 +1,6 @@
 import { UseGuards } from '@nestjs/common';
-import {
-  Resolver,
-  Mutation,
-  Args,
-  Subscription,
-  Query,
-  GqlExecutionContext,
-} from '@nestjs/graphql';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Resolver, Mutation, Args, Subscription, Query } from '@nestjs/graphql';
 import { MessageMedia } from 'src/rooms/entities/sub/message.entity';
 import { UploadingService } from 'src/uploading/uploading.service';
 import { GqlAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -29,7 +23,6 @@ import {
   ConversationsOutput,
   ConversationsOutputValue,
 } from './dto/output/conversations.output';
-import { Conversation } from './entities/conversation.entity';
 
 @Resolver()
 export class ConversationsResolver {
@@ -37,6 +30,7 @@ export class ConversationsResolver {
     private readonly conversationsService: ConversationsService,
     private readonly redisService: RedisService,
     private readonly uploadingService: UploadingService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   @Query(() => ConversationsOutput, { name: 'conversations' })
@@ -144,6 +138,12 @@ export class ConversationsResolver {
         _id: addNewMessage.value._id,
         members: addNewMessage.value.members as Member[],
       });
+
+      this.eventEmitter.emit(
+        'added.pm',
+        conversationSendMessageInput.memberId,
+        'AAAA',
+      );
     }
 
     return {

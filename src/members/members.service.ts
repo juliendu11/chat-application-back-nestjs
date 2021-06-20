@@ -16,6 +16,7 @@ import { Member, MemberDocument } from './entities/member.entity';
 import { getResult } from '../helpers/code.helper';
 import { RedisService } from '../redis/redis.service';
 import { RefreshTokenResult } from '../types/RefreshTokenResult';
+import { DeadPushSubscription } from 'src/types/DeadPushSubscription';
 
 @Injectable()
 export class MembersService {
@@ -233,7 +234,7 @@ export class MembersService {
             member.username,
             member.profilPic,
           ),
-          refreshToken: this.createRefreshToken(),
+          refreshToken: this.createRefreshToken(member._id),
           member: member as Member,
         },
       };
@@ -571,7 +572,6 @@ export class MembersService {
     refreshToken: string,
   ): Promise<ServiceResponseType<RefreshTokenResult | null>> {
     try {
-      throw new Error('Test');
       this.logger.log(
         `>>>> [generateNewTokenFromRefreshToken] Use with ${JSON.stringify({
           refreshToken,
@@ -586,6 +586,26 @@ export class MembersService {
         const response = {
           code: 403,
           message: 'Token is invalid',
+          value: null,
+        };
+
+        this.logger.log(
+          `<<<< [generateNewTokenFromRefreshToken] Response: ${JSON.stringify(
+            response,
+          )}`,
+        );
+
+        return response;
+      }
+
+      const checkIfRefreshTokenIsGood = jwt.verify(
+        refreshToken,
+        this.config.get('refreshtoken.key'),
+      );
+      if (!checkIfRefreshTokenIsGood) {
+        const response = {
+          code: 403,
+          message: 'Refresh token is invalid',
           value: null,
         };
 
@@ -712,7 +732,129 @@ export class MembersService {
     );
   }
 
-  private createRefreshToken(): string {
-    return generateRandomToken();
+  private createRefreshToken(_id: string): string {
+    const expWeek = this.config.get('refreshtoken.time');
+    const secret = this.config.get('refreshtoken.key');
+
+    return jwt.sign(
+      { data: { _id }, iat: Math.floor(Date.now() / 1000) - 30 },
+      secret,
+      {
+        expiresIn: `${expWeek}w`,
+        issuer: 'myApp.com',
+        audience: 'myApp.com',
+      },
+    );
+  }
+
+  async addPushSubscription(
+    memberId: string,
+    endpoint: string,
+    auth: string,
+    p256dh: string,
+  ): Promise<ServiceResponseType<undefined>> {
+    try {
+      this.logger.log(
+        `>>>> [addPushSubscription] Use with ${JSON.stringify({
+          memberId,
+          endpoint,
+          auth,
+          p256dh,
+        })}`,
+      );
+
+      const getMember = await this.findOne(
+        memberId,
+        ['push_subscriptions'],
+        false,
+      );
+      if (!getMember || !getMember.value) {
+        const response = { code: 400, message: 'Bad data', value: null };
+
+        this.logger.log(
+          `<<<< [addPushSubscription] Response: ${JSON.stringify(response)}`,
+        );
+      }
+
+      if (
+        getMember.value.push_subscriptions.some(
+          (x) =>
+            x.endpoint === endpoint && x.auth === auth && x.p256dh === p256dh,
+        )
+      ) {
+        const response = {
+          code: 200,
+          message: 'This subscription already exist',
+          value: null,
+        };
+
+        this.logger.log(
+          `<<<< [addPushSubscription] Response: ${JSON.stringify(response)}`,
+        );
+      }
+      getMember.value.push_subscriptions.push({
+        endpoint,
+        p256dh,
+        auth,
+      });
+
+      await (getMember.value as MemberDocument).save();
+
+      const response = { code: 200, message: '', value: null };
+
+      this.logger.log(
+        `<<<< [addPushSubscription] Response: ${JSON.stringify(response)}`,
+      );
+
+      return response;
+    } catch (error) {
+      this.logger.error(`<<<< [addPushSubscription] Exception`, error);
+
+      return {
+        code: 500,
+        message: error.message,
+        value: null,
+      };
+    }
+  }
+
+  async deleteDeadPushSub(
+    member: MemberDocument,
+    deadSubs: DeadPushSubscription[],
+  ): Promise<ServiceResponseType<undefined>> {
+    try {
+      this.logger.log(
+        `>>>> [deleteDeadPushSub] Use with ${JSON.stringify({
+          email: member.email,
+          deadSubs,
+        })}`,
+      );
+
+      deadSubs.forEach((deadSub) => {
+        member.push_subscriptions = member.push_subscriptions.filter(
+          (x) =>
+            x.auth !== deadSub.auth &&
+            x.endpoint !== deadSub.endpoint &&
+            x.p256dh !== deadSub.p256dh,
+        );
+      });
+      await member.save();
+
+      const response = { code: 200, message: '', value: null };
+
+      this.logger.log(
+        `<<<< [deleteDeadPushSub] Response: ${JSON.stringify(response)}`,
+      );
+
+      return response;
+    } catch (error) {
+      this.logger.error(`<<<< [addPushSubscription] Exception`, error);
+
+      return {
+        code: 500,
+        message: error.message,
+        value: null,
+      };
+    }
   }
 }

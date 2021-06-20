@@ -26,7 +26,7 @@ $ npm run docker:prod
 
 - [X] Login/Register/Forgot Password/Reset Password
 - [X] Send mail for confirm account and password management
-- [/] Refresh token (with 2 week validity)
+- [X] Refresh token (with 2 week validity)
 - [X] Room management (create, send message)
 - [X] Conversation management (view conv, send message, subscription when new message)
 - [X] Sending images
@@ -36,7 +36,7 @@ $ npm run docker:prod
 - [X] Contacts management (online, offline list with subscription)
 - [X] Update profil image
 - [ ] Option for sub message room
-- [ ] Push notification PWA
+- [X] Push notification PWA (for private message only if app is closed or if app not focused)
 
 - [ ] Unit tests
 - [ ] Integrations tests

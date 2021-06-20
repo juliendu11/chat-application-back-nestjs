@@ -2,7 +2,7 @@ import { ObjectType, Field } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 @ObjectType()
-@Schema()
+@Schema({ _id: false, id: false })
 export class ForgotPassword {
   @Field(() => String)
   @Prop()
