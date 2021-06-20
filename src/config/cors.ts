@@ -1,3 +1,3 @@
 export default {
-  allowedOrigin: 'http://127.0.0.1:5500',
+  allowedOrigin: process.env.CORS_ALLOWED_ORIGIN,
 };
