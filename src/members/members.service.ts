@@ -123,6 +123,7 @@ export class MembersService {
         const response = {
           code: 400,
           message: 'An account already exists with this email or username',
+          value: null,
         };
 
         this.logger.log(
@@ -196,7 +197,7 @@ export class MembersService {
         return response;
       }
 
-      if (!bcrypt.compareSync(password, member.password)) {
+      if (!(await bcrypt.compare(password, member.password))) {
         const response = {
           message: 'Bad information, bad password',
           code: 401,
@@ -341,6 +342,7 @@ export class MembersService {
         const response = {
           message: 'The token has expired',
           code: 401,
+          value: null,
         };
 
         this.logger.log(
@@ -358,6 +360,7 @@ export class MembersService {
       const response = {
         code: 200,
         message: 'Congratulations your password has been changed',
+        value: null,
       };
 
       this.logger.log(
