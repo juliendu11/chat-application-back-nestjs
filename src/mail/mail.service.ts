@@ -65,7 +65,7 @@ export class MailService {
     text: string,
     html: string,
   ) {
-    this.mailerService.sendMail({
+    await this.mailerService.sendMail({
       to,
       subject,
       text,
