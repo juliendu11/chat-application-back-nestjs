@@ -5,8 +5,8 @@ import { createWriteStream, ReadStream } from 'fs';
 import { mkdir } from 'fs/promises';
 import { ServiceResponseType } from '../interfaces/GraphqlResponse';
 import { FileUpload } from 'graphql-upload';
-import { generateRandomToken } from 'src/helpers/random.helper';
-import { MessageMedia } from 'src/rooms/entities/sub/message.entity';
+import { generateRandomToken } from '../helpers/random.helper';
+import { MessageMedia } from '../rooms/entities/sub/message.entity';
 
 @Injectable()
 export class UploadingService {

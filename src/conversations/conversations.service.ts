@@ -208,7 +208,7 @@ export class ConversationsService {
   ): Promise<ServiceResponseType<Conversation | null>> {
     try {
       this.logger.log(
-        `>>>> [addOrCreate] Use with ${JSON.stringify({
+        `>>>> [addMessage] Use with ${JSON.stringify({
           toMemberId,
           memberId,
           message,
@@ -245,12 +245,12 @@ export class ConversationsService {
       };
 
       this.logger.log(
-        `<<<< [addOrCreate] Response: ${JSON.stringify({ response })}`,
+        `<<<< [addMessage] Response: ${JSON.stringify({ response })}`,
       );
 
       return response;
     } catch (error) {
-      this.logger.error(`<<<< [addOrCreate] Exception`, error);
+      this.logger.error(`<<<< [addMessage] Exception`, error);
 
       return {
         code: 500,

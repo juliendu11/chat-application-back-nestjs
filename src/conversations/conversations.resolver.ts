@@ -1,8 +1,8 @@
 import { UseGuards } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Resolver, Mutation, Args, Subscription, Query } from '@nestjs/graphql';
-import { MessageMedia } from 'src/rooms/entities/sub/message.entity';
-import { UploadingService } from 'src/uploading/uploading.service';
+import { MessageMedia } from '../rooms/entities/sub/message.entity';
+import { UploadingService } from '../uploading/uploading.service';
 import { GqlAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../decorators/graphql-current-user.decorator';
 import { getResult } from '../helpers/code.helper';
@@ -139,10 +139,25 @@ export class ConversationsResolver {
         members: addNewMessage.value.members as Member[],
       });
 
+      const from = user.username;
+
+      let messageToSend = '';
+
+      if (conversationSendMessageInput.message && mediasPath.length !== 0) {
+        messageToSend += `${addNewMessage.value.last_message.message} +${mediasPath.length} medias`;
+      } else if (
+        conversationSendMessageInput.message &&
+        mediasPath.length === 0
+      ) {
+        messageToSend = addNewMessage.value.last_message.message;
+      } else {
+        messageToSend = `${mediasPath.length} medias`;
+      }
+
       this.eventEmitter.emit(
         'added.pm',
         conversationSendMessageInput.memberId,
-        'AAAA',
+        `New message from ${from}: ${messageToSend}`,
       );
     }
 
