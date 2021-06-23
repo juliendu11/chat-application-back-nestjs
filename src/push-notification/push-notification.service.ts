@@ -4,8 +4,8 @@ import { ServiceResponseType } from '../interfaces/GraphqlResponse';
 import * as webpush from 'web-push';
 import { NestjsWinstonLoggerService } from 'nestjs-winston-logger';
 import { Member } from '../members/entities/member.entity';
-import { getResult } from 'src/helpers/code.helper';
-import { DeadPushSubscription } from 'src/types/DeadPushSubscription';
+import { getResult } from '../helpers/code.helper';
+import { DeadPushSubscription } from '../types/DeadPushSubscription';
 
 @Injectable()
 export class PushNotificationService {
@@ -88,7 +88,6 @@ export class PushNotificationService {
       return {
         code: 500,
         message: error.message,
-        value: null,
       };
     }
   }
