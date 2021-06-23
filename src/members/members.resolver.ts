@@ -29,16 +29,14 @@ import { JWTTokenData } from '../types/JWTToken';
 import { RedisService } from '../redis/redis.service';
 import { MembersInfoOutput } from './dto/ouput/members-info.output';
 import { MembersUpdateProfilPicInput } from './dto/input/members-update-profil-pic-input';
-import { MEMBER_OFFLINE, MEMBER_ONLINE } from 'src/redis/redis.pub-sub';
-import { RoomMessageAddedOuput } from 'src/rooms/dto/output/room-message-added.ouput';
-import { LoginResult } from 'src/types/LoginResult';
+import { MEMBER_OFFLINE, MEMBER_ONLINE } from '../redis/redis.pub-sub';
 import { MemberMyInformationOutput } from './dto/ouput/member-my-information.output';
 import { MemberRefreshTokenOutput } from './dto/ouput/member-refresh-token.output';
 import {
   MemberOnlineOutput,
   MemberOnlineOutputUser,
 } from './dto/ouput/member-online.ouput';
-import { UploadingService } from 'src/uploading/uploading.service';
+import { UploadingService } from '../uploading/uploading.service';
 
 @Resolver(() => Member)
 export class MembersResolver {
@@ -59,13 +57,17 @@ export class MembersResolver {
       memberRegisterMemberInput,
     );
 
-    this.mailService.sendConfirmAccountMail(
-      value.email,
-      value.registration_information.token,
-    );
+    const result = getResult(code);
+
+    if (result) {
+      this.mailService.sendConfirmAccountMail(
+        value.email,
+        value.registration_information.token,
+      );
+    }
 
     return {
-      result: getResult(code),
+      result,
       message,
     };
   }
@@ -277,9 +279,9 @@ export class MembersResolver {
   async membersOnline(): Promise<MemberOnlineOutput> {
     const membersOnline = await this.redisService.getUsersConncted();
     return {
-      result: true,
-      message: '',
-      values: membersOnline,
+      result: getResult(membersOnline.code),
+      message: membersOnline.message,
+      values: membersOnline.value,
     };
   }
 
@@ -296,11 +298,6 @@ export class MembersResolver {
       message,
       members: value,
     };
-  }
-
-  @Query(() => String)
-  sayHello() {
-    return 'Hello';
   }
 
   @Subscription(() => MemberOnlineOutputUser, {

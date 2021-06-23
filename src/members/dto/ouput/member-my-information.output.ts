@@ -1,6 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { GraphqlQLResponseType } from 'src/interfaces/GraphqlResponse';
-import { Member } from 'src/members/entities/member.entity';
+import { GraphqlQLResponseType } from '../../../interfaces/GraphqlResponse';
+import { Member } from '../../../members/entities/member.entity';
 
 @ObjectType()
 export class MemberMyInformationOutput implements GraphqlQLResponseType {

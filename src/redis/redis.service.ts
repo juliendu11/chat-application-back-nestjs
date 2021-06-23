@@ -89,18 +89,30 @@ export class RedisService {
     }
   }
 
-  async getUsersConncted(): Promise<JWTTokenData[]> {
-    const users: JWTTokenData[] = [];
+  async getUsersConncted(): Promise<ServiceResponseType<JWTTokenData[]>> {
+    try {
+      const users: JWTTokenData[] = [];
 
-    const keys = await this.redis.keys(ONLINE_KEY + ':*');
-    await Promise.all(
-      keys.map(async (key) => {
-        const user = await this.redis.get(key);
-        users.push(JSON.parse(user));
-      }),
-    );
+      const keys = await this.redis.keys(ONLINE_KEY + ':*');
+      await Promise.all(
+        keys.map(async (key) => {
+          const user = await this.redis.get(key);
+          users.push(JSON.parse(user));
+        }),
+      );
 
-    return users;
+      return {
+        code: 200,
+        message: '',
+        value: users,
+      };
+    } catch (error) {
+      return {
+        code: 500,
+        message: error.message,
+        value: [],
+      };
+    }
   }
 
   private getSessionKeyName(username: string) {
