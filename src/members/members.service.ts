@@ -412,6 +412,7 @@ export class MembersService {
         const response = {
           message: 'The token has expired',
           code: 401,
+          value: null,
         };
 
         this.logger.log(
@@ -570,7 +571,7 @@ export class MembersService {
     );
   }
 
-  public async generateNewTokenFromRefreshToken(
+  async generateNewTokenFromRefreshToken(
     oldToken: string,
     refreshToken: string,
   ): Promise<ServiceResponseType<RefreshTokenResult | null>> {
@@ -771,12 +772,14 @@ export class MembersService {
         ['push_subscriptions'],
         false,
       );
-      if (!getMember || !getMember.value) {
+      if (!getResult(getMember.code) || !getMember.value) {
         const response = { code: 400, message: 'Bad data', value: null };
 
         this.logger.log(
           `<<<< [addPushSubscription] Response: ${JSON.stringify(response)}`,
         );
+
+        return response;
       }
 
       if (
@@ -794,7 +797,10 @@ export class MembersService {
         this.logger.log(
           `<<<< [addPushSubscription] Response: ${JSON.stringify(response)}`,
         );
+
+        return response;
       }
+
       getMember.value.push_subscriptions.push({
         endpoint,
         p256dh,
