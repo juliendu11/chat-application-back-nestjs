@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { NestjsWinstonLoggerService } from 'nestjs-winston-logger';
-import { getResult } from 'src/helpers/code.helper';
-import { MembersService } from 'src/members/members.service';
+import { getResult } from '../helpers/code.helper';
+import { MembersService } from '../members/members.service';
 import { ServiceResponseType } from '../interfaces/GraphqlResponse';
 import { RoomCreateInput } from './dto/input/room-create.input';
 import { GetRoomMessageValue } from './dto/output/room-get-message.output';
@@ -61,10 +61,10 @@ export class RoomsService {
     try {
       this.logger.log(`>>>> [findAll] Use`);
 
-      const rooms = await this.roomModel.find({});
-      await Promise.all(
+      let rooms = await this.roomModel.find({});
+      rooms = await Promise.all(
         rooms.map(async (room) => {
-          await room
+          return await room
             .populate({
               path: 'last_message.user',
               select: '_id email username profilPic',
@@ -110,7 +110,7 @@ export class RoomsService {
       };
 
       this.logger.log(
-        `<<<< [findAll] Response: ${JSON.stringify({ response })}`,
+        `<<<< [findOne] Response: ${JSON.stringify({ response })}`,
       );
 
       return response;
@@ -149,7 +149,7 @@ export class RoomsService {
       const moreAvailable = messagesLength - (skip + limit) > 0;
       const pageAvailable = Math.ceil(messagesLength / limit);
 
-      const messages = await this.roomModel.aggregate([
+      let messages = await this.roomModel.aggregate([
         match,
         { $project: { messages: { $reverseArray: '$messages' } } },
         { $unwind: '$messages' },
@@ -166,7 +166,7 @@ export class RoomsService {
         },
       ]);
 
-      await Promise.all(
+      messages = await Promise.all(
         messages.map(async (message) => {
           const getMember = await this.memberService.findOne(
             message.user.toString(),
@@ -181,6 +181,7 @@ export class RoomsService {
           }
 
           message.user = getMember.value;
+          return message;
         }),
       );
 

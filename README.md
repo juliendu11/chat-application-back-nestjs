@@ -39,4 +39,5 @@ $ npm run docker:prod
 - [X] Push notification PWA (for private message only if app is closed or if app not focused)
 
 - [ ] Unit tests
+- [ ] Refactor
 - [ ] Integrations tests
