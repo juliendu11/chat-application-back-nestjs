@@ -38,6 +38,6 @@ $ npm run docker:prod
 - [ ] Option for sub message room
 - [X] Push notification PWA (for private message only if app is closed or if app not focused)
 
-- [ ] Unit tests
+- [X] Unit tests
 - [ ] Refactor
 - [ ] Integrations tests

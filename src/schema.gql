@@ -213,7 +213,6 @@ type Query {
   room(roomGetInput: RoomGetInput!): RoomGetOutput!
   roomMessage(roomGetMessageInput: RoomGetMessageInput!): RoomGetMessageOuput!
   rooms: RoomGetsOutput!
-  sayHello: String!
 }
 
 type RegistrationInformation {
