@@ -12,7 +12,6 @@ import { RoomAddMessageOutput } from './dto/output/room-add-message.output';
 import { RoomMessageAddedOuput } from './dto/output/room-message-added.ouput';
 
 import { getResult } from '../helpers/code.helper';
-import { CommonOutput } from '../common/CommonOutput';
 import { GqlAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { JWTTokenData } from '../types/JWTToken';
 import { CurrentUser } from '../decorators/graphql-current-user.decorator';
@@ -25,7 +24,7 @@ import { RoomGetMessageOuput } from './dto/output/room-get-message.output';
 import { RoomGetMessageInput } from './dto/input/room-get-message.input';
 import { RoomGetsOutput } from './dto/output/room-gets.output';
 import { RoomGetInput } from './dto/input/room-get.input';
-import { UploadingService } from 'src/uploading/uploading.service';
+import { UploadingService } from '../uploading/uploading.service';
 @Resolver(() => Room)
 export class RoomsResolver {
   constructor(
